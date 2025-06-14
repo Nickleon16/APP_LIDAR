@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>860</width>
+    <height>463</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QComboBox" name="comboBox_9">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>80</y>
+     <width>91</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>a</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>b</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>c</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QComboBox" name="comboBox_10">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>160</y>
+     <width>91</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>a</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>b</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>c</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QLabel" name="label_11">
+   <property name="geometry">
+    <rect>
+     <x>570</x>
+     <y>80</y>
+     <width>101</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Descripcion:</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="comboBox_14">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>240</y>
+     <width>91</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>a</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>b</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>c</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QLabel" name="label_15">
+   <property name="geometry">
+    <rect>
+     <x>570</x>
+     <y>240</y>
+     <width>131</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Correspondencia: </string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="comboBox_12">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>200</y>
+     <width>91</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>a</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>b</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>c</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QLabel" name="label_12">
+   <property name="geometry">
+    <rect>
+     <x>570</x>
+     <y>120</y>
+     <width>67</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Metodo:</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="comboBox_11">
+   <property name="geometry">
+    <rect>
+     <x>710</x>
+     <y>120</y>
+     <width>91</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>a</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>b</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>c</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QLabel" name="label_14">
+   <property name="geometry">
+    <rect>
+     <x>570</x>
+     <y>200</y>
+     <width>101</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Iteraciones:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_13">
+   <property name="geometry">
+    <rect>
+     <x>570</x>
+     <y>160</y>
+     <width>101</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Tolerancia:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_7">
+   <property name="geometry">
+    <rect>
+     <x>560</x>
+     <y>40</y>
+     <width>161</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Procesamiento:</string>
+   </property>
+  </widget>
+  <widget class="QListWidget" name="nubesListWidget">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>20</y>
+     <width>451</width>
+     <height>381</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="subirNubePushButton">
+   <property name="geometry">
+    <rect>
+     <x>720</x>
+     <y>380</y>
+     <width>89</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Subir nube</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="nombreNubeLineEdit">
+   <property name="geometry">
+    <rect>
+     <x>700</x>
+     <y>300</y>
+     <width>113</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="descripcionNubeLineEdit">
+   <property name="geometry">
+    <rect>
+     <x>700</x>
+     <y>340</y>
+     <width>113</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>570</x>
+     <y>300</y>
+     <width>101</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Nombre nube:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>570</x>
+     <y>340</y>
+     <width>131</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Descripcion nube:</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="verNubePushButton">
+   <property name="geometry">
+    <rect>
+     <x>570</x>
+     <y>390</y>
+     <width>111</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Visualizar nube</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
