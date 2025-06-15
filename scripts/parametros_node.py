@@ -1,4 +1,5 @@
-import sys
+# parametros_node.py
+
 from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem
 from PyQt5.QtCore import Qt
 from parametros_ui import Ui_Form
@@ -20,7 +21,6 @@ class ParametrosWidget(QWidget):
         self.ui.nuevoPresetButton.clicked.connect(self.nuevo_preset)
         self.ui.eliminarPresetpushButton.clicked.connect(self.eliminar_preset)
 
-        # Cargamos la lista de presets (parametros)
         self.load_parametros()
 
 #----------------------------------------------------------------------------------
@@ -58,8 +58,8 @@ class ParametrosWidget(QWidget):
 
             if response.status_code in [200, 201]:
                 QMessageBox.information(self, "Éxito", "Preset guardado.")
-                self.load_parametros()  # Recargar la lista de presets
-                # self.limpiar_formulario() (opcional)
+                self.load_parametros() 
+                # self.limpiar_formulario()
             else:
                 QMessageBox.warning(self, "Error", response.text)
         except Exception as e:
@@ -67,8 +67,7 @@ class ParametrosWidget(QWidget):
 
 #----------------------------------------------------------------------------------
 
-    def load_parametros(self):
-        """Carga la lista de presets (parametros) para el usuario"""
+    def load_parametros(self):        
         try:
             response = requests.get(f"http://127.0.0.1:5000/api/parametros/por_usuario/{self.user_id}")
             if response.status_code == 200:
@@ -102,17 +101,15 @@ class ParametrosWidget(QWidget):
 
                 QMessageBox.information(self, "Info", "Parámetros por defecto cargados.")
             else:
-                QMessageBox.warning(self, "Error", "No se pudieron cargar los parámetros por defecto.")
-                self.ui.descripcionLineEdit.setText("Todo mal")
+                QMessageBox.warning(self, "Error", "No se pudieron cargar los parámetros por defecto.")                
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error al conectar: {str(e)}")
 
 #----------------------------------------------------------------------------------
 
-    def seleccionar_preset(self, item):
-        """Cuando se selecciona un preset en la lista, cargarlo"""
+    def seleccionar_preset(self, item):        
         parametro_id = item.data(Qt.UserRole)
-        self.parametro_id = parametro_id  # estamos en modo "editar"
+        self.parametro_id = parametro_id 
 
         try:
             response = requests.get(f"http://127.0.0.1:5000/api/parametros/{parametro_id}")
@@ -124,34 +121,32 @@ class ParametrosWidget(QWidget):
                 self.ui.velMaxSpinBox.setValue(p.get("velocidad_maxima", 0.0))
                 self.ui.velLineSpinBox.setValue(p.get("velocidad_lineal", 0.0))
                 self.ui.velAnguSpinBox.setValue(p.get("velocidad_angular", 0.0))
-                # ... el resto de campos si los usas
+                # TODO: cargar el resto de campos
             else:
                 QMessageBox.warning(self, "Error", "No se pudo cargar el preset seleccionado.")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error al conectar: {str(e)}")
 
-#----------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------
 
-    def nuevo_preset(self):
-        """Prepara el formulario para crear un nuevo preset"""
-        self.parametro_id = None  # modo "crear nuevo"
+    def nuevo_preset(self):        
+        self.parametro_id = None  
         self.ui.nombrePresetLineEdit.clear()
         self.ui.descripcionLineEdit.clear()
         self.ui.velMaxSpinBox.setValue(0.0)
         self.ui.velLineSpinBox.setValue(0.0)
         self.ui.velAnguSpinBox.setValue(0.0)
-        # ... limpiar el resto de campos
+        # TODO: limpiar el resto de campos
 
-        self.ui.presetsListWidget.clearSelection()  # deseleccionar cualquier preset
+        self.ui.presetsListWidget.clearSelection() 
 
-#----------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------
 
     def eliminar_preset(self):
         if not self.parametro_id:
             QMessageBox.warning(self, "Aviso", "No hay preset seleccionado para eliminar.")
             return
 
-        # Confirmación
         reply = QMessageBox.question(
             self, "Confirmar eliminación",
             "¿Está seguro de que desea eliminar este preset?",
@@ -164,8 +159,8 @@ class ParametrosWidget(QWidget):
             response = requests.delete(f"http://127.0.0.1:5000/api/parametros/{self.parametro_id}")
             if response.status_code == 200:
                 QMessageBox.information(self, "Éxito", "Preset eliminado.")
-                self.nuevo_preset()   # limpiar formulario
-                self.load_parametros()  # recargar lista
+                self.nuevo_preset()   
+                self.load_parametros()  
             else:
                 QMessageBox.warning(self, "Error", response.text)
         except Exception as e:

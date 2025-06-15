@@ -2,7 +2,6 @@
 
 from PyQt5.QtWidgets import QWidget, QMessageBox, QLineEdit
 from login_ui import Ui_loginWindow
-import sqlite3, os
 import requests 
 
 class LoginWindow(QWidget):

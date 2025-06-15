@@ -1,7 +1,6 @@
 # api_server.py
 
 import io
-import sqlite3
 from flask import Flask, request, jsonify, send_file
 import mysql.connector  
 from db_connection import get_connection
@@ -334,29 +333,29 @@ def eliminar_parametro(parametro_id):
 
 @app.route('/api/nube_puntos', methods=['POST'])
 def subir_nube_puntos():
-    if 'archivo' not in request.files:
-        return jsonify({"error": "Archivo no encontrado"}), 400
-
     archivo = request.files['archivo']
-    nombre = request.form.get('nombre', archivo.filename)
-    descripcion = request.form.get('descripcion', '')
+    nombre = request.form.get('nombre')
+    descripcion = request.form.get('descripcion')
+    nombre_archivo = request.form.get('nombre_archivo')
+
+    if not archivo:
+        return jsonify({"error": "No se envió archivo"}), 400
+
+    datos = archivo.read()    
+    print(f"Tamaño recibido: {len(datos)} bytes")  # DEBUG
+
     tipo = archivo.filename.split('.')[-1]
 
-    datos_binarios = archivo.read()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO nubes_de_puntos (nombre, descripcion, archivo_tipo, nube_datos, nombre_archivo)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (nombre, descripcion, tipo, datos, nombre_archivo))
+    conn.commit()
+    conn.close()
 
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO nubes_de_puntos (nombre, descripcion, archivo_tipo, nube_datos)
-            VALUES (%s, %s, %s, %s)
-        """, (nombre, descripcion, tipo, datos_binarios))
-        conn.commit()
-        return jsonify({"message": "Nube de puntos subida exitosamente"}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
+    return jsonify({"mensaje": "Nube guardada"}), 201
 
 #-------------------------------------------------------------------------------
 
@@ -365,7 +364,7 @@ def listar_nubes():
     try:        
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT nubeID, nombre, descripcion, nombre, fecha FROM nubes_de_puntos ORDER BY fecha DESC")
+        cursor.execute("SELECT nubeID, nombre, descripcion, archivo_tipo, fecha FROM nubes_de_puntos ORDER BY fecha DESC")
         nubes = cursor.fetchall()        
         return jsonify({"nubes": nubes}), 200
     except Exception as e:        
@@ -381,24 +380,28 @@ def descargar_nube(id):
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT nube_datos, nombre FROM nubes_de_puntos WHERE nubeID = %s", (id,))
+        cursor.execute("SELECT nube_datos, nombre, archivo_tipo FROM nubes_de_puntos WHERE nubeID = %s", (id,))
         nube = cursor.fetchone()
+        cursor.close()
+        conn.close()
 
         if not nube:
             return jsonify({"error": "Nube no encontrada"}), 404
 
-        # Enviar como archivo
+        extension = nube['archivo_tipo']
+        nombre_archivo = f"{nube['nombre']}.{extension}"
+
         return send_file(
             io.BytesIO(nube["nube_datos"]),
-            download_name=nube["nombre"],
-            mimetype='application/octet-stream'
+            mimetype='application/octet-stream',
+            download_name=nombre_archivo,
+            as_attachment=False
         )
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    finally:
-        conn.close()
 
+#-------------------------------------------------------------------------------
 
 if __name__ == '__main__':
     app.run(debug=True)

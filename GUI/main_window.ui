@@ -23,7 +23,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab">
     <attribute name="title">
@@ -33,11 +33,6 @@
    <widget class="QWidget" name="tab_2">
     <attribute name="title">
      <string>Captura</string>
-    </attribute>
-   </widget>
-   <widget class="QWidget" name="tab_4">
-    <attribute name="title">
-     <string>Exportar</string>
     </attribute>
    </widget>
   </widget>

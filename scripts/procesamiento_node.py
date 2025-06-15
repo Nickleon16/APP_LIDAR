@@ -1,6 +1,9 @@
 # procesamiento_node.py
 
-import sys
+import os
+import tempfile
+import re
+
 from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem
 from PyQt5.QtCore import Qt
 from procesamiento_ui import Ui_Form
@@ -8,6 +11,8 @@ import requests
 from PyQt5.QtWidgets import QFileDialog
 import tempfile
 import open3d as o3d
+import subprocess
+import tempfile
 
 
 class ProcesamientoWidget(QWidget):
@@ -21,6 +26,7 @@ class ProcesamientoWidget(QWidget):
         self.ui.verNubePushButton.clicked.connect(self.visualizar_nube)
         self.cargar_lista_nubes()
 
+#-----------------------------------------------------------------------------
 
     def subir_nube_puntos(self):
         archivo_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo de nube de puntos", "", "Nube de puntos (*.pcd *.ply *.xyz *.txt)")
@@ -30,26 +36,33 @@ class ProcesamientoWidget(QWidget):
                 with open(archivo_path, 'rb') as f:
                     datos = f.read()
 
-                nombre = self.ui.nombreNubeLineEdit.text() or archivo_path.split("/")[-1]
+                # Asegúrate de usar el nombre con extensión real
+                nombre_archivo = os.path.basename(archivo_path)
+                extension = os.path.splitext(nombre_archivo)[-1].lstrip('.')  # 'pcd', 'ply', etc.
+
+                nombre = self.ui.nombreNubeLineEdit.text() or os.path.splitext(nombre_archivo)[0]
                 descripcion = self.ui.descripcionNubeLineEdit.text()
 
                 files = {
-                    'archivo': (nombre, datos)
+                    'archivo': (nombre_archivo, datos)
                 }
                 data = {
                     'nombre': nombre,
-                    'descripcion': descripcion
+                    'descripcion': descripcion,
+                    'nombre_archivo': nombre_archivo
                 }
 
                 response = requests.post("http://127.0.0.1:5000/api/nube_puntos", files=files, data=data)
-
-                if response.status_code == 201:
+                if response.status_code == 201:                    
                     QMessageBox.information(self, "Éxito", "Archivo subido correctamente.")
+                    self.cargar_lista_nubes()
                 else:
                     QMessageBox.warning(self, "Error", response.text)
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"No se pudo subir el archivo: {str(e)}")
     
+#-----------------------------------------------------------------------------
+
     def cargar_lista_nubes(self):
         try:
             response = requests.get("http://127.0.0.1:5000/api/nube_puntos")
@@ -65,15 +78,11 @@ class ProcesamientoWidget(QWidget):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error al conectar: {str(e)}")
 
-
-    def visualizar_nube(self):
-        item = self.ui.nubesListWidget.currentItem()
-        if not item:
-            QMessageBox.warning(self, "Atención", "Selecciona una nube para visualizar.")
-            return
-
-        nube_id = item.data(Qt.UserRole)
-
+#-----------------------------------------------------------------------------
+    
+    def visualizar_nube(self, nube_id):
+        
+        nube_id = self.ui.nubesListWidget.currentItem().data(Qt.UserRole)
         try:
             response = requests.get(f"http://127.0.0.1:5000/api/nube_puntos/{nube_id}")
             if response.status_code == 200:
@@ -81,8 +90,8 @@ class ProcesamientoWidget(QWidget):
                     tmp_file.write(response.content)
                     tmp_path = tmp_file.name
 
-                nube = o3d.io.read_point_cloud(tmp_path)
-                o3d.visualization.draw_geometries([nube])
+                # Llama a otro script que visualiza sin Qt ni ROS
+                subprocess.Popen(["python3", "visualizador_nubes.py", tmp_path])
             else:
                 QMessageBox.warning(self, "Error", "No se pudo descargar la nube.")
         except Exception as e:

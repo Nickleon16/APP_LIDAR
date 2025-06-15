@@ -1,7 +1,6 @@
 # user_registration_node.py
 
 import sys
-import os
 import threading
 import requests
 import rospy
@@ -18,13 +17,10 @@ class UserRegistrationWidget(QWidget):
         self.ui.setupUi(self)
         self.editing_user_id = None
 
-        # Conectar los botones
         self.ui.registerButton.clicked.connect(self.register_user)
         self.ui.clearButton.clicked.connect(self.clear_fields)
         self.ui.editarButton.clicked.connect(self.on_edit_button_clicked)
-        self.ui.borrarButton.clicked.connect(self.on_delete_button_clicked)
-
-        #self.ui.tableWidget.cellClicked.connect(self.on_row_selected)
+        self.ui.borrarButton.clicked.connect(self.on_delete_button_clicked)        
 
 #----------------------------------------------------------------------------------
 
@@ -219,6 +215,8 @@ def main():
     widget.show()
     widget.load_users()  
     sys.exit(app.exec_())
+    # TODO: Revisar si esnecesario esta parte
+    # FIXME: Hay problemas con la edicion de usuarios ya registrados
 
 if __name__ == "__main__":
     main()
