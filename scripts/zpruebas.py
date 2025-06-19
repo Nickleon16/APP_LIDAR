@@ -1,13 +1,25 @@
 import open3d as o3d
-import urllib.request
-import tempfile
 
-# URL de una nube de puntos en formato PCD (del repositorio de PCL)
-url = "https://raw.githubusercontent.com/PointCloudLibrary/data/master/tutorials/table_scene_lms400.pcd"
+pcd = o3d.io.read_point_cloud("recursos/mesa.pcd")
+resto = pcd  # copia inicial
 
-with tempfile.NamedTemporaryFile(suffix=".pcd", delete=False) as f:
-    print(f"Descargando {url} ...")
-    urllib.request.urlretrieve(url, f.name)
-    nube = o3d.io.read_point_cloud(f.name)
-    print("Número de puntos:", len(nube.points))
-    o3d.visualization.draw_geometries([nube])
+planes = []
+colors = [[1, 0, 1], [0, 1, 0], [0, 0, 1]]  # colores para planos
+
+for i in range(3): 
+    plane_model, inliers = resto.segment_plane(
+        distance_threshold=0.01,
+        ransac_n=3,
+        num_iterations=1000
+    )
+
+    inlier_cloud = resto.select_by_index(inliers)
+    inlier_cloud.paint_uniform_color(colors[i % len(colors)])
+    planes.append(inlier_cloud)
+
+    # Quitar plano segmentado
+    resto = resto.select_by_index(inliers, invert=True)
+
+# Visualizar los planos encontrados + lo que queda
+#o3d.visualization.draw_geometries(planes + [resto])
+o3d.visualization.draw_geometries(planes)

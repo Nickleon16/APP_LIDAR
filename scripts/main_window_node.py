@@ -5,6 +5,7 @@ from main_window_ui import Ui_MainWindow
 from user_registration_node import UserRegistrationWidget
 from parametros_node import ParametrosWidget 
 from procesamiento_node import ProcesamientoWidget
+from visualizacion_node import VisualizacionWidget
 
 class MainWindow(QMainWindow):
     def __init__(self, user_id):
@@ -24,3 +25,7 @@ class MainWindow(QMainWindow):
         # --- Pestaña de procesamiento ---
         self.procesamiento_widget = ProcesamientoWidget(user_id)
         self.ui.tabWidget.addTab(self.procesamiento_widget, "Procesamiento")
+
+        # --- Pestaña de visualizacion ---
+        self.visualizacion_widget = VisualizacionWidget(user_id)
+        self.ui.tabWidget.addTab(self.visualizacion_widget, "Visualización")

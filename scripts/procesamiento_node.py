@@ -1,19 +1,13 @@
 # procesamiento_node.py
 
-import os
-import tempfile
-import re
-
-from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem
+from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem, QFileDialog
 from PyQt5.QtCore import Qt
 from procesamiento_ui import Ui_Form
 import requests
-from PyQt5.QtWidgets import QFileDialog
-import tempfile
 import open3d as o3d
-import subprocess
 import tempfile
-
+import subprocess
+import os
 
 class ProcesamientoWidget(QWidget):
     def __init__(self, user_id):
@@ -22,45 +16,31 @@ class ProcesamientoWidget(QWidget):
         self.ui = Ui_Form()
         self.ui.setupUi(self)
 
-        self.ui.subirNubePushButton.clicked.connect(self.subir_nube_puntos)
-        self.ui.verNubePushButton.clicked.connect(self.visualizar_nube)
+        self.ui.filtradoRuidoFrame.setVisible(False)
+        self.ui.downsamplingFrame.setVisible(False)
+        self.ui.segmentacionFrame.setVisible(False)
+
+        self.ui.actualizarListaPushButton.clicked.connect(self.cargar_lista_nubes)  
+
+        self.ui.filtroRuidoCheckBox.stateChanged.connect(self.mostrar_filtrado_ruido)
+        self.ui.downsamplingCheckBox.stateChanged.connect(self.mostrar_downsampling)
+        self.ui.segmentacionCheckBox.stateChanged.connect(self.mostrar_segmentacion)
+
+        self.ui.procesarNubePushButton.clicked.connect(self.aplicar_procesamiento)
+
         self.cargar_lista_nubes()
 
 #-----------------------------------------------------------------------------
 
-    def subir_nube_puntos(self):
-        archivo_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo de nube de puntos", "", "Nube de puntos (*.pcd *.ply *.xyz *.txt)")
+    def mostrar_filtrado_ruido(self, state):
+        self.ui.filtradoRuidoFrame.setVisible(state == Qt.Checked)
 
-        if archivo_path:
-            try:
-                with open(archivo_path, 'rb') as f:
-                    datos = f.read()
+    def mostrar_downsampling(self, state):
+        self.ui.downsamplingFrame.setVisible(state == Qt.Checked)
 
-                # Asegúrate de usar el nombre con extensión real
-                nombre_archivo = os.path.basename(archivo_path)
-                extension = os.path.splitext(nombre_archivo)[-1].lstrip('.')  # 'pcd', 'ply', etc.
+    def mostrar_segmentacion(self, state):
+        self.ui.segmentacionFrame.setVisible(state == Qt.Checked)
 
-                nombre = self.ui.nombreNubeLineEdit.text() or os.path.splitext(nombre_archivo)[0]
-                descripcion = self.ui.descripcionNubeLineEdit.text()
-
-                files = {
-                    'archivo': (nombre_archivo, datos)
-                }
-                data = {
-                    'nombre': nombre,
-                    'descripcion': descripcion,
-                    'nombre_archivo': nombre_archivo
-                }
-
-                response = requests.post("http://127.0.0.1:5000/api/nube_puntos", files=files, data=data)
-                if response.status_code == 201:                    
-                    QMessageBox.information(self, "Éxito", "Archivo subido correctamente.")
-                    self.cargar_lista_nubes()
-                else:
-                    QMessageBox.warning(self, "Error", response.text)
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"No se pudo subir el archivo: {str(e)}")
-    
 #-----------------------------------------------------------------------------
 
     def cargar_lista_nubes(self):
@@ -79,20 +59,90 @@ class ProcesamientoWidget(QWidget):
             QMessageBox.critical(self, "Error", f"Error al conectar: {str(e)}")
 
 #-----------------------------------------------------------------------------
-    
-    def visualizar_nube(self, nube_id):
-        
-        nube_id = self.ui.nubesListWidget.currentItem().data(Qt.UserRole)
-        try:
-            response = requests.get(f"http://127.0.0.1:5000/api/nube_puntos/{nube_id}")
-            if response.status_code == 200:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".pcd") as tmp_file:
-                    tmp_file.write(response.content)
-                    tmp_path = tmp_file.name
 
-                # Llama a otro script que visualiza sin Qt ni ROS
-                subprocess.Popen(["python3", "visualizador_nubes.py", tmp_path])
-            else:
+    def aplicar_procesamiento(self):
+        item = self.ui.nubesListWidget.currentItem()
+        if not item:
+            QMessageBox.warning(self, "Atención", "Selecciona una nube para procesar.")
+            return
+
+        nube_id = item.data(Qt.UserRole)        
+
+        try:            
+            response = requests.get(f"http://127.0.0.1:5000/api/nube_puntos/{nube_id}")
+            if response.status_code != 200:
                 QMessageBox.warning(self, "Error", "No se pudo descargar la nube.")
+                return
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pcd") as tmp_file:
+                tmp_file.write(response.content)
+                tmp_path = tmp_file.name
+            
+            pcd = o3d.io.read_point_cloud(tmp_path)
+            procesado_bool = False
+#------------------------------------------------------------------------------            
+            # Filtro de ruido
+            if self.ui.filtroRuidoCheckBox.isChecked():       
+                procesado_bool = True         
+                vecinos = int(self.ui.vecinosSpinBox.value())
+                std_dev = float(self.ui.devStdSpinBox.value())
+                pcd_procesada, _ = pcd.remove_statistical_outlier(nb_neighbors=vecinos, std_ratio=std_dev)
+#------------------------------------------------------------------------------
+            # Downsampling
+            if self.ui.downsamplingCheckBox.isChecked():
+                if procesado_bool == False:
+                    pcd_procesada = pcd
+
+                procesado_bool = True
+                voxel_size = float(self.ui.voxelSizeSpinBox.value())
+                pcd_procesada = pcd_procesada.voxel_down_sample(voxel_size=voxel_size)
+#------------------------------------------------------------------------------
+            if self.ui.segmentacionCheckBox.isChecked():                
+                
+                if procesado_bool == False:
+                    resto = pcd
+                else:
+                    resto = pcd_procesada
+                
+                procesado_bool = True
+            
+                num_planos = int(self.ui.numPlanosSpinBox.value())
+                distancia = float(self.ui.distanciaSpinBox.value())
+                iteraciones = int(self.ui.iteracionesSpinBox.value())   
+                
+                planes = []
+                colors = [[1, 0, 1], [0, 1, 0], [0, 0, 1], [1, 1, 0]]
+
+                for i in range(num_planos):
+                    plane_model, inliers = resto.segment_plane(
+                        distance_threshold=distancia,
+                        ransac_n=3,
+                        num_iterations=iteraciones
+                    )
+
+                    inlier_cloud = resto.select_by_index(inliers)
+                    inlier_cloud.paint_uniform_color(colors[i % len(colors)])
+                    planes.append(inlier_cloud)
+
+                    # Quitar plano segmentado
+                    resto = resto.select_by_index(inliers, invert=True)
+
+                nube_segmentada = planes[0]
+                for p in planes[1:]:
+                    nube_segmentada += p
+                
+                pcd_procesada = nube_segmentada
+                #o3d.visualization.draw_geometries(planes + [resto])
+#------------------------------------------------------------------------------
+
+            os.remove(tmp_path) 
+            # Guardar nube procesada temporalmente para visualizar
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pcd") as tmp_out:
+                o3d.io.write_point_cloud(tmp_out.name, pcd_procesada)
+                path_resultado = tmp_out.name
+
+            # Llamar al visualizador externo
+            subprocess.Popen(["python3", "visualizador_nubes.py", path_resultado])
+
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error al visualizar: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Error al procesar la nube: {str(e)}")

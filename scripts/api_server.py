@@ -102,6 +102,28 @@ def obtener_usuarios():
 
 #-------------------------------------------------------------------------------
 
+@app.route('/api/usuarios/<int:user_id>', methods=['GET'])
+def obtener_usuario(user_id):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT nombre, email, rol FROM usuarios WHERE userID = %s", (user_id,))
+        usuario = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not usuario:
+            return jsonify({"error": "Usuario no encontrado"}), 404
+
+        return jsonify(usuario), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+#-------------------------------------------------------------------------------
+
 @app.route('/api/usuarios/<int:user_id>', methods=['PUT'])
 def update_usuario(user_id):
     data = request.get_json()
@@ -341,8 +363,7 @@ def subir_nube_puntos():
     if not archivo:
         return jsonify({"error": "No se envió archivo"}), 400
 
-    datos = archivo.read()    
-    print(f"Tamaño recibido: {len(datos)} bytes")  # DEBUG
+    datos = archivo.read()        
 
     tipo = archivo.filename.split('.')[-1]
 
@@ -397,6 +418,25 @@ def descargar_nube(id):
             download_name=nombre_archivo,
             as_attachment=False
         )
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+#-------------------------------------------------------------------------------
+
+@app.route('/api/nube_puntos/<int:id>', methods=['DELETE'])
+def eliminar_nube(id):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM nubes_de_puntos WHERE nubeID = %s", (id,))
+        conn.commit()
+        conn.close()
+
+        if cursor.rowcount == 0:
+            return jsonify({"error": "Nube no encontrada"}), 404
+
+        return jsonify({"mensaje": "Nube eliminada"}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500

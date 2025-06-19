@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>10</y>
+     <y>20</y>
      <width>841</width>
      <height>461</height>
     </rect>
@@ -206,6 +206,12 @@
        <height>26</height>
       </rect>
      </property>
+     <property name="maximum">
+      <number>3</number>
+     </property>
+     <property name="singleStep">
+      <number>1</number>
+     </property>
     </widget>
     <widget class="QSpinBox" name="velLineSpinBox">
      <property name="geometry">
@@ -216,6 +222,12 @@
        <height>26</height>
       </rect>
      </property>
+     <property name="maximum">
+      <number>3</number>
+     </property>
+     <property name="singleStep">
+      <number>1</number>
+     </property>
     </widget>
     <widget class="QSpinBox" name="velAnguSpinBox">
      <property name="geometry">
@@ -225,6 +237,12 @@
        <width>48</width>
        <height>26</height>
       </rect>
+     </property>
+     <property name="maximum">
+      <number>3</number>
+     </property>
+     <property name="singleStep">
+      <number>1</number>
      </property>
     </widget>
     <widget class="QLabel" name="label_19">
@@ -368,8 +386,8 @@
     <widget class="QComboBox" name="comboBox_5">
      <property name="geometry">
       <rect>
-       <x>180</x>
-       <y>360</y>
+       <x>680</x>
+       <y>80</y>
        <width>81</width>
        <height>25</height>
       </rect>
@@ -377,6 +395,11 @@
      <item>
       <property name="text">
        <string>Angular </string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Gauss</string>
       </property>
      </item>
      <item>
@@ -436,17 +459,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>Grados</string>
-     </property>
-    </widget>
-    <widget class="QSpinBox" name="velMaxSpinBox_2">
-     <property name="geometry">
-      <rect>
-       <x>180</x>
-       <y>320</y>
-       <width>48</width>
-       <height>26</height>
-      </rect>
+      <string>Grados?</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_51">
@@ -462,31 +475,6 @@
       <string>Reduccion de ruido:</string>
      </property>
     </widget>
-    <widget class="QComboBox" name="comboBox_24">
-     <property name="geometry">
-      <rect>
-       <x>680</x>
-       <y>110</y>
-       <width>91</width>
-       <height>25</height>
-      </rect>
-     </property>
-     <item>
-      <property name="text">
-       <string>a</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>b</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>c</string>
-      </property>
-     </item>
-    </widget>
     <widget class="QLabel" name="label_52">
      <property name="geometry">
       <rect>
@@ -499,31 +487,6 @@
      <property name="text">
       <string>Metodo de filtrado: </string>
      </property>
-    </widget>
-    <widget class="QComboBox" name="comboBox_25">
-     <property name="geometry">
-      <rect>
-       <x>680</x>
-       <y>70</y>
-       <width>91</width>
-       <height>25</height>
-      </rect>
-     </property>
-     <item>
-      <property name="text">
-       <string>a</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>b</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>c</string>
-      </property>
-     </item>
     </widget>
     <widget class="QLabel" name="label_53">
      <property name="geometry">
@@ -551,28 +514,103 @@
       <string>Pre-procesamiento:</string>
      </property>
     </widget>
-    <widget class="QComboBox" name="comboBox_26">
+    <widget class="QComboBox" name="comboBox_6">
      <property name="geometry">
       <rect>
-       <x>680</x>
-       <y>150</y>
-       <width>91</width>
+       <x>180</x>
+       <y>320</y>
+       <width>81</width>
        <height>25</height>
       </rect>
      </property>
      <item>
       <property name="text">
-       <string>a</string>
+       <string>Alta</string>
       </property>
      </item>
      <item>
       <property name="text">
-       <string>b</string>
+       <string>Media</string>
       </property>
      </item>
      <item>
       <property name="text">
-       <string>c</string>
+       <string>Baja</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QComboBox" name="comboBox_7">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>360</y>
+       <width>81</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <item>
+      <property name="text">
+       <string>Alto</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Medio</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Bajo</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QComboBox" name="comboBox_8">
+     <property name="geometry">
+      <rect>
+       <x>680</x>
+       <y>120</y>
+       <width>81</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <item>
+      <property name="text">
+       <string>Alto</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Medio</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Bajo</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QComboBox" name="comboBox_9">
+     <property name="geometry">
+      <rect>
+       <x>680</x>
+       <y>160</y>
+       <width>81</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <item>
+      <property name="text">
+       <string>Alta</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Media</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Baja</string>
       </property>
      </item>
     </widget>
