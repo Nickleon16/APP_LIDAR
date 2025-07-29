@@ -9,6 +9,8 @@ from user_registration_ui import Ui_UserRegistration
 from PyQt5.QtWidgets import QTableWidgetItem
 import ast 
 from PyQt5.QtWidgets import QMessageBox
+import re
+
 
 class UserRegistrationWidget(QWidget):
     def __init__(self):
@@ -82,9 +84,10 @@ class UserRegistrationWidget(QWidget):
                 response = requests.post(url, json=data)                
 
             if response.status_code in (200, 201):
-                self.ui.statusLabel.setText("Usuario actualizado." if self.editing_user_id else "Usuario registrado.")
+                self.ui.statusLabel.setText("Usuario actualizado." if self.editing_user_id else "Usuario registrado.")                
                 self.clear_fields()
                 self.load_users()
+                self.editing_user_id = None
             else:
                 try:
                     error_msg = response.json().get("error", "Error desconocido")
@@ -112,7 +115,6 @@ class UserRegistrationWidget(QWidget):
         self.ui.activoRadioButton.setChecked(False)
         self.ui.inactivoRadioButton.setChecked(False)
 
-
 #----------------------------------------------------------------------------------
 
     def load_users(self):
@@ -138,7 +140,6 @@ class UserRegistrationWidget(QWidget):
                 self.ui.statusLabel.setText("Error al cargar usuarios.")
         except Exception as e:
             self.ui.statusLabel.setText(f"Error: {str(e)}")
-
 
 #----------------------------------------------------------------------------------
 

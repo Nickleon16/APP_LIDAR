@@ -14,6 +14,9 @@ class LoginWindow(QWidget):
         self.ui.passwordLineEdit.setEchoMode(QLineEdit.Password)
 
         self.ui.confirmButton.clicked.connect(self.attempt_login)
+        self.ui.usernameLineEdit.returnPressed.connect(self.attempt_login)
+        self.ui.passwordLineEdit.returnPressed.connect(self.attempt_login)
+
         self.switch_window = switch_window_callback
 
     def attempt_login(self):

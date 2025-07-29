@@ -1,85 +1,74 @@
 # init_db.py
 
-from db_connection import get_connection
-import mysql.connector
+from db_connection import SessionLocal
+from modelos import Usuario, Parametro, Base
+import datetime
+
+# create_schema.py
+from db_connection import engine
+
+# Crear las tablas en la base de datos
+Base.metadata.create_all(engine)
 
 def crear_usuario_admin():
-    conn = None
+    session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # Verificar si ya existe un admin
-        cursor.execute("SELECT * FROM usuarios WHERE username = 'admin'")
-        if cursor.fetchone():
+        admin = session.query(Usuario).filter_by(username='admin').first()
+        if admin:
             print("El usuario 'admin' ya existe.")
         else:
-            cursor.execute("""
-                INSERT INTO usuarios (nombre, email, username, password, rol, user_status)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (
-                'Administrador del sistema',
-                'admin@example.com',
-                'a',
-                'a',
-                'Administrador',
-                'Activo'
-            ))
-            conn.commit()
+            nuevo_admin = Usuario(
+                nombre='Administrador del sistema',
+                email='admin@example.com',
+                username='a',
+                password='a',
+                rol='Administrador',
+                user_status='Activo'
+            )
+            session.add(nuevo_admin)
+            session.commit()
             print("Usuario administrador creado exitosamente.")
-
-    except mysql.connector.Error as err:
-        print(f"Error de MySQL: {err}")
-
+    except Exception as e:
+        print(f"[ERROR] al crear el admin: {e}")
+        session.rollback()
     finally:
-        if conn:
-            conn.close()
-
-#-------------------------------------------------------------------------------
+        session.close()
 
 def crear_parametros_por_defecto():
-    conn = None
+    session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # Verificar si ya existen parámetros globales
-        cursor.execute("""
-            SELECT * FROM parametros WHERE usuario_id IS NULL
-        """)
-        if cursor.fetchone():
+        existe = session.query(Parametro).filter(Parametro.usuario_id == None).first()
+        if existe:
             print("Los parámetros por defecto ya existen.")
         else:
-            cursor.execute("""
-                INSERT INTO parametros (
-                    usuario_id, descripcion, nombre_preset,
-                    velocidad_maxima, velocidad_lineal, velocidad_angular,
-                    tasa_muestreo, campo_vision, resolucion, filtro_ruido,
-                    metodo_filtrado, reduccion_ruido, compensacion_movimiento,
-                    metodo_procesamiento, tolerancia, iteraciones, correspondencia
-                ) VALUES (
-                    %s, %s, %s,
-                    %s, %s, %s,
-                    %s, %s, %s, %s,
-                    %s, %s, %s,
-                    %s, %s, %s, %s
-                )
-            """, (
-                None, "Parámetros por defecto", "Default",
-                2.0, 1.0, 0.5,               # velocidades
-                10, 180.0, "Alta", "Media",   # captura
-                "Filtro Gaussiano", "Media", "Compensación básica", # preprocesamiento
-                "ICP", 0.01, 50, "KD-Tree"    # procesamiento
-            ))
-            conn.commit()
+            parametros = Parametro(
+                usuario_id=None,
+                nombre_preset="Default",
+                descripcion="Parámetros por defecto",
+                velocidad_maxima=2.0,
+                velocidad_lineal=1.0,
+                velocidad_angular=0.5,
+                tasa_muestreo=10,
+                campo_vision=180.0,
+                #resolucion="Alta",
+                #filtro_ruido="Media",
+                #metodo_filtrado="Filtro Gaussiano",
+                #reduccion_ruido="Media",
+                #compensacion_movimiento="Compensación básica",
+                #metodo_procesamiento="ICP",
+                #tolerancia=0.01,
+                #iteraciones=50,
+                #correspondencia="KD-Tree",
+                fecha=datetime.datetime.utcnow()
+            )
+            session.add(parametros)
+            session.commit()
             print("Parámetros por defecto creados exitosamente.")
-
-    except mysql.connector.Error as err:
-        print(f"Error de MySQL: {err}")
-
+    except Exception as e:
+        print(f"[ERROR] al crear parámetros por defecto: {e}")
+        session.rollback()
     finally:
-        if conn:
-            conn.close()
+        session.close()
 
 if __name__ == "__main__":
     crear_usuario_admin()

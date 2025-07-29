@@ -13,8 +13,7 @@ class ParametrosWidget(QWidget):
         self.ui.setupUi(self)
 
         self.parametro_id = None
-
-        # Conectar botones        
+          
         self.ui.confirmarPushButton.clicked.connect(self.save_parametros)
         self.ui.loadDefaultsButton.clicked.connect(self.cargar_parametros_por_defecto)
         self.ui.presetsListWidget.itemClicked.connect(self.seleccionar_preset)
@@ -29,7 +28,7 @@ class ParametrosWidget(QWidget):
         data = {
             "usuario_id": self.user_id,
             "nombre_preset": self.ui.nombrePresetLineEdit.text(),
-            "descripcion": self.ui.descripcionLineEdit.text(),
+            "descripcion": self.ui.descripcionTextEdit.text(),
 
             "velocidad_maxima": self.ui.velMaxSpinBox.value(),
             "velocidad_lineal": self.ui.velLineSpinBox.value(),
@@ -94,7 +93,7 @@ class ParametrosWidget(QWidget):
                 defaults = response.json().get("parametros", {})
 
                 self.ui.nombrePresetLineEdit.setText(defaults.get("nombre_preset", "Default"))
-                self.ui.descripcionLineEdit.setText(defaults.get("descripcion", ""))
+                self.ui.descripcionTextEdit.setText(defaults.get("descripcion", ""))
                 self.ui.velMaxSpinBox.setValue(defaults.get("velocidad_maxima", 0.0))
                 self.ui.velLineSpinBox.setValue(defaults.get("velocidad_lineal", 0.0))
                 self.ui.velAnguSpinBox.setValue(defaults.get("velocidad_angular", 0.0))
@@ -117,7 +116,7 @@ class ParametrosWidget(QWidget):
                 p = response.json().get("parametros", {})
 
                 self.ui.nombrePresetLineEdit.setText(p.get("nombre_preset", ""))
-                self.ui.descripcionLineEdit.setText(p.get("descripcion", ""))
+                self.ui.descripcionTextEdit.setText(p.get("descripcion", ""))
                 self.ui.velMaxSpinBox.setValue(p.get("velocidad_maxima", 0.0))
                 self.ui.velLineSpinBox.setValue(p.get("velocidad_lineal", 0.0))
                 self.ui.velAnguSpinBox.setValue(p.get("velocidad_angular", 0.0))
@@ -132,7 +131,7 @@ class ParametrosWidget(QWidget):
     def nuevo_preset(self):        
         self.parametro_id = None  
         self.ui.nombrePresetLineEdit.clear()
-        self.ui.descripcionLineEdit.clear()
+        self.ui.descripcionTextEdit.clear()
         self.ui.velMaxSpinBox.setValue(0.0)
         self.ui.velLineSpinBox.setValue(0.0)
         self.ui.velAnguSpinBox.setValue(0.0)

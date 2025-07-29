@@ -5,6 +5,8 @@ import os
 from PyQt5.QtWidgets import QApplication
 from login_node import LoginWindow
 from main_window_node import MainWindow
+import rospy
+
 
 class AppController:
     def __init__(self):
@@ -21,6 +23,7 @@ class AppController:
         self.login_window.close()
 
 if __name__ == "__main__":
+    rospy.init_node("qt_teleop_node", anonymous=True)
     app = QApplication(sys.argv)
     controller = AppController()
     controller.show_login()

@@ -1,9 +1,11 @@
 # api_server.py
 
+from sqlalchemy.orm import Session
+from db_connection import SessionLocal
+from modelos import Usuario, Parametro, NubeDePuntos
 import io
 from flask import Flask, request, jsonify, send_file
-import mysql.connector  
-from db_connection import get_connection
+from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
 
@@ -13,38 +15,24 @@ app = Flask(__name__)
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    conn = None
+    db: Session = SessionLocal()
     try:
         data = request.json
-        username = data.get('username')
-        password = data.get('password')
+        user = db.query(Usuario).filter_by(username=data['username'], password=data['password']).first()
 
-        conn = get_connection()
-        if conn is None:
-            raise Exception("Conexión fallida")
-
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT * FROM usuarios 
-            WHERE username = %s AND password = %s
-        """, (username, password))
-
-        user = cursor.fetchone()
         if user:
             return jsonify({
                 'status': 'success',
                 'message': 'Login exitoso',
-                'userID': user[0],  
-                'username': username
+                'userID': user.userID,
+                'username': user.username
             }), 200
         else:
             return jsonify({'status': 'error', 'message': 'Credenciales inválidas'}), 401
-
     except Exception as e:
-        return jsonify({'status': 'error', 'message': f'Error: {str(e)}'}), 500
+        return jsonify({'status': 'error', 'message': str(e)}), 500
     finally:
-        if conn:
-            conn.close()
+        db.close()
 
 #-------------------------------------------------------------------------------
 # /api/usuarios: "POST"/crear_usuario - "GET"/obtener_usuarios 
@@ -53,130 +41,104 @@ def login():
 
 @app.route("/api/usuarios", methods=["POST"])
 def crear_usuario():
-    data = request.get_json()
-    nombre = data.get("nombre")
-    email = data.get("email")
-    username = data.get("username")
-    password = data.get("password")
-    rol = data.get("rol")
-    status = data.get("status")
-
-    conn = None
+    db: Session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO usuarios (nombre, email, username, password, rol, user_status)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (nombre, email, username, password, rol, status))
-        conn.commit()
-        return jsonify({"message": "Usuario creado"}), 201
+        data = request.get_json()
 
-    except mysql.connector.IntegrityError:
-        return jsonify({"error": "El usuario ya existe"}), 400
+        nuevo_usuario = Usuario(
+            nombre=data["nombre"],
+            email=data["email"],
+            username=data["username"],
+            password=data["password"],
+            rol=data["rol"],
+            user_status=data["status"]
+        )
+
+        db.add(nuevo_usuario)
+        db.commit()
+        db.refresh(nuevo_usuario)
+
+        return jsonify({"message": "Usuario creado", "userID": nuevo_usuario.userID}), 201
+
+    except IntegrityError as e:
+        db.rollback()
+        if 'username' in str(e.orig).lower():
+            return jsonify({"error": "El nombre de usuario ya está en uso"}), 400
+        return jsonify({"error": "El nombre de usuario ya está en uso"}), 500
+
     except Exception as e:
+        db.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        if conn:
-            conn.close()
+        db.close()
 
 #-------------------------------------------------------------------------------
 
 @app.route('/api/usuarios', methods=['GET'])
 def obtener_usuarios():
-    conn = None
-    try:        
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT userID, nombre, email, username, rol, user_status 
-            FROM usuarios
-        """)
-        usuarios = cursor.fetchall()        
-        return jsonify({"usuarios": usuarios}), 200
-    except Exception as e:        
-        return jsonify({"error": str(e)}), 500
-    finally:
-        if conn:
-            conn.close()
-
-#-------------------------------------------------------------------------------
-
-@app.route('/api/usuarios/<int:user_id>', methods=['GET'])
-def obtener_usuario(user_id):
+    db: Session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT nombre, email, rol FROM usuarios WHERE userID = %s", (user_id,))
-        usuario = cursor.fetchone()
-        cursor.close()
-        conn.close()
-
-        if not usuario:
-            return jsonify({"error": "Usuario no encontrado"}), 404
-
-        return jsonify(usuario), 200
+        usuarios = db.query(Usuario).all()
+        resultado = [
+            {
+                "userID": u.userID,
+                "nombre": u.nombre,
+                "email": u.email,
+                "username": u.username,
+                "rol": u.rol,
+                "status": u.user_status
+            } for u in usuarios
+        ]
+        return jsonify({"usuarios": resultado}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        if conn:
-            conn.close()
+        db.close()
 
 #-------------------------------------------------------------------------------
 
 @app.route('/api/usuarios/<int:user_id>', methods=['PUT'])
 def update_usuario(user_id):
-    data = request.get_json()
-
-    conn = None
+    db: Session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            UPDATE usuarios 
-            SET nombre = %s, email = %s, username = %s, password = %s, rol = %s, user_status = %s 
-            WHERE userID = %s
-        """, (
-            data["nombre"],
-            data["email"],
-            data["username"],
-            data["password"],
-            data["rol"],
-            data["status"],
-            user_id
-        ))
+        data = request.get_json()
+        usuario = db.query(Usuario).filter_by(userID=user_id).first()
 
-        conn.commit()
-        affected_rows = cursor.rowcount
+        if not usuario:
+            return jsonify({"error": "Usuario no encontrado"}), 404
 
-        if affected_rows == 0:
-            return jsonify({"error": "Usuario no encontrado o sin cambios"}), 404
+        for field in ["nombre", "email", "username", "password", "rol", "status"]:
+            setattr(usuario, field if field != "status" else "user_status", data[field])
+
+        db.commit()
+        return jsonify({"message": "Usuario actualizado"}), 200
 
     except Exception as e:
+        db.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        if conn:
-            conn.close()
+        db.close()
 
 #-------------------------------------------------------------------------------
 
 @app.route('/api/usuarios/<int:user_id>', methods=['DELETE'])
 def eliminar_usuario(user_id):
-    conn = None
+    db: Session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM usuarios WHERE userID = %s", (user_id,))
-        conn.commit()
+        usuario = db.query(Usuario).filter_by(userID=user_id).first()
 
-        if cursor.rowcount == 0:
+        if not usuario:
             return jsonify({"error": "Usuario no encontrado"}), 404
 
+        db.delete(usuario)
+        db.commit()
+        return jsonify({"message": "Usuario eliminado"}), 200
+
     except Exception as e:
+        db.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        if conn:
-            conn.close()
+        db.close()
 
 #-------------------------------------------------------------------------------
 # /api/parametros: "GET"/obtener_parametros - "POST"/crear_parametro
@@ -185,168 +147,161 @@ def eliminar_usuario(user_id):
 
 @app.route('/api/parametros/por_usuario/<int:usuario_id>', methods=['GET'])
 def obtener_parametros_por_usuario(usuario_id):
-    conn = None
+    db: Session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT parametroID, nombre_preset, descripcion, fecha
-            FROM parametros
-            WHERE usuario_id = %s
-            ORDER BY fecha DESC
-        """, (usuario_id,))
-        parametros = cursor.fetchall()
-        
-        return jsonify({"parametros": parametros}), 200
+        parametros = db.query(Parametro)\
+            .filter(Parametro.usuario_id == usuario_id)\
+            .order_by(Parametro.fecha.desc())\
+            .all()
+
+        resultado = [
+            {
+                "parametroID": p.parametroID,
+                "nombre_preset": p.nombre_preset,
+                "descripcion": p.descripcion,
+                "fecha": p.fecha.isoformat()
+            } for p in parametros
+        ]
+        return jsonify({"parametros": resultado}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        if conn:
-            conn.close()
+        db.close()
 
 #-------------------------------------------------------------------------------
 
 @app.route('/api/parametros/<int:parametro_id>', methods=['GET'])
 def obtener_parametros_por_id(parametro_id):
-    conn = None
+    db: Session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM parametros WHERE parametroID = %s", (parametro_id,))
-        parametro = cursor.fetchone()
-
+        parametro = db.get(Parametro, parametro_id)  # <- esto cambia
         if parametro:
-            return jsonify({"parametros": parametro}), 200
-        else:
-            return jsonify({"error": "No se encontró el preset"}), 404
+            resultado = {
+                "parametroID": parametro.parametroID,
+                "nombre_preset": parametro.nombre_preset,
+                "descripcion": parametro.descripcion,
+                "fecha": parametro.fecha.isoformat() if parametro.fecha else None,
+                "velocidad_maxima": parametro.velocidad_maxima,
+                "velocidad_lineal": parametro.velocidad_lineal,
+                "velocidad_angular": parametro.velocidad_angular,
+                "tasa_muestreo": parametro.tasa_muestreo,
+                "campo_vision": parametro.campo_vision,
+                "resolucion": parametro.resolucion
+                # TODO: Agregar los campos restantes
+                #"filtro_ruido": parametro.filtro_ruido,
+                #"metodo_filtrado": parametro.metodo_filtrado,
+                #"reduccion_ruido": parametro.reduccion_ruido,
+                #"compensacion_movimiento": parametro.compensacion_movimiento,
+                #"metodo_procesamiento": parametro.metodo_procesamiento,
+                #"tolerancia": parametro.tolerancia,
+                #"iteraciones": parametro.iteraciones,
+                #"correspondencia": parametro.correspondencia
+            }
+            return jsonify({"parametros": resultado}), 200
+        return jsonify({"error": "No se encontró el preset"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        if conn:
-            conn.close()
+        db.close()
 
 #-------------------------------------------------------------------------------
 
 @app.route('/api/parametros/default', methods=['GET'])
 def obtener_parametros_default():
-    conn = None
+    db: Session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT * FROM parametros 
-            WHERE usuario_id IS NULL 
-            ORDER BY fecha DESC 
-            LIMIT 1
-        """)
-        parametros = cursor.fetchone()
+        parametro = db.query(Parametro)\
+            .filter(Parametro.usuario_id == None)\
+            .order_by(Parametro.fecha.desc())\
+            .first()
 
-        if parametros:
-            return jsonify({"parametros": parametros}), 200
-        else:
-            return jsonify({"error": "No existen parámetros por defecto."}), 404
+        if parametro:
+            resultado = {
+                "parametroID": parametro.parametroID,
+                "nombre_preset": parametro.nombre_preset,
+                "descripcion": parametro.descripcion,
+                "fecha": parametro.fecha.isoformat() if parametro.fecha else None,
+                "velocidad_maxima": parametro.velocidad_maxima,
+                "velocidad_lineal": parametro.velocidad_lineal,
+                "velocidad_angular": parametro.velocidad_angular,
+                "tasa_muestreo": parametro.tasa_muestreo,
+                "campo_vision": parametro.campo_vision,
+                "resolucion": parametro.resolucion,
+                "filtro_ruido": parametro.filtro_ruido,
+                "metodo_filtrado": parametro.metodo_filtrado,
+                "reduccion_ruido": parametro.reduccion_ruido,
+                "compensacion_movimiento": parametro.compensacion_movimiento,
+                "metodo_procesamiento": parametro.metodo_procesamiento,
+                "tolerancia": parametro.tolerancia,
+                "iteraciones": parametro.iteraciones,
+                "correspondencia": parametro.correspondencia
+            }
+            return jsonify({"parametros": resultado}), 200
+
+        return jsonify({"error": "No existen parámetros por defecto."}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        if conn:
-            conn.close()
+        db.close()
 
 #-------------------------------------------------------------------------------
 
 @app.route('/api/parametros', methods=['POST'])
 def crear_parametro():
     data = request.get_json()
+    db: Session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            INSERT INTO parametros (
-            usuario_id, nombre_preset, descripcion,
-            velocidad_maxima, velocidad_lineal, velocidad_angular,
-            tasa_muestreo, campo_vision, resolucion, filtro_ruido,
-            metodo_filtrado, reduccion_ruido, compensacion_movimiento,
-            metodo_procesamiento, tolerancia, iteraciones, correspondencia
-        ) VALUES (%s, %s, %s, 
-                    %s, %s, %s,
-                    %s, %s, %s, %s, 
-                    %s, %s, %s, 
-                    %s, %s, %s, %s)
-
-        """, (
-            data["usuario_id"], data["nombre_preset"], data["descripcion"], data["velocidad_maxima"],
-            data["velocidad_lineal"], data["velocidad_angular"], data["tasa_muestreo"],
-            data["campo_vision"], data["resolucion"], data["filtro_ruido"],
-            data["metodo_filtrado"], data["reduccion_ruido"], data["compensacion_movimiento"],
-            data["metodo_procesamiento"], data["tolerancia"], data["iteraciones"],
-            data["correspondencia"]
-        ))
-
-        conn.commit()
-        return jsonify({"message": "Preset creado"}), 201
+        parametro = Parametro(**data)
+        db.add(parametro)
+        db.commit()
+        db.refresh(parametro)
+        return jsonify({"message": "Preset creado", "parametroID": parametro.parametroID}), 201
     except Exception as e:
+        db.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        if conn:
-            conn.close()
+        db.close()
 
 #-------------------------------------------------------------------------------
 
 @app.route('/api/parametros/<int:parametro_id>', methods=['PUT'])
 def actualizar_parametro(parametro_id):
     data = request.get_json()
+    db: Session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            UPDATE parametros SET
-                nombre_preset = %s, descripcion = %s,
-                velocidad_maxima = %s, velocidad_lineal = %s, velocidad_angular = %s,
-                tasa_muestreo = %s, campo_vision = %s, resolucion = %s, filtro_ruido = %s,
-                metodo_filtrado = %s, reduccion_ruido = %s, compensacion_movimiento = %s,
-                metodo_procesamiento = %s, tolerancia = %s, iteraciones = %s, correspondencia = %s
-            WHERE parametroID = %s
-        """, (
-            data["nombre_preset"], data["descripcion"], data["velocidad_maxima"],
-            data["velocidad_lineal"], data["velocidad_angular"], data["tasa_muestreo"],
-            data["campo_vision"], data["resolucion"], data["filtro_ruido"],
-            data["metodo_filtrado"], data["reduccion_ruido"], data["compensacion_movimiento"],
-            data["metodo_procesamiento"], data["tolerancia"], data["iteraciones"],
-            data["correspondencia"], parametro_id
-        ))
-
-        conn.commit()
-
-        if cursor.rowcount == 0:
+        parametro = db.query(Parametro).get(parametro_id)
+        if not parametro:
             return jsonify({"error": "No se encontró el preset"}), 404
+
+        for key, value in data.items():
+            setattr(parametro, key, value)
+
+        db.commit()
         return jsonify({"message": "Preset actualizado"}), 200
     except Exception as e:
+        db.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        if conn:
-            conn.close()
+        db.close()
 
 #-------------------------------------------------------------------------------
 
 @app.route('/api/parametros/<int:parametro_id>', methods=['DELETE'])
 def eliminar_parametro(parametro_id):
-    conn = None
+    db: Session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("DELETE FROM parametros WHERE parametroID = %s", (parametro_id,))
-        conn.commit()
-
-        if cursor.rowcount == 0:
+        parametro = db.query(Parametro).get(parametro_id)
+        if not parametro:
             return jsonify({"error": "No se encontró el preset"}), 404
+
+        db.delete(parametro)
+        db.commit()
         return jsonify({"message": "Preset eliminado"}), 200
     except Exception as e:
+        db.rollback()
         return jsonify({"error": str(e)}), 500
     finally:
-        if conn:
-            conn.close()
+        db.close()
 
 #-------------------------------------------------------------------------------
 # /api/nube_puntos: "GET"/obtener_nube - "POST"/crear_nube
@@ -363,83 +318,114 @@ def subir_nube_puntos():
     if not archivo:
         return jsonify({"error": "No se envió archivo"}), 400
 
-    datos = archivo.read()        
-
+    datos = archivo.read()
     tipo = archivo.filename.split('.')[-1]
 
-    conn = get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO nubes_de_puntos (nombre, descripcion, archivo_tipo, nube_datos, nombre_archivo)
-        VALUES (%s, %s, %s, %s, %s)
-    """, (nombre, descripcion, tipo, datos, nombre_archivo))
-    conn.commit()
-    conn.close()
-
-    return jsonify({"mensaje": "Nube guardada"}), 201
-
+    db: Session = SessionLocal()
+    try:
+        nube = NubeDePuntos(
+            nombre=nombre,
+            descripcion=descripcion,
+            archivo_tipo=tipo,
+            nombre_archivo=nombre_archivo,
+            nube_datos=datos
+        )
+        db.add(nube)
+        db.commit()
+        return jsonify({"mensaje": "Nube guardada"}), 201
+    except Exception as e:
+        db.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
 #-------------------------------------------------------------------------------
 
 @app.route('/api/nube_puntos', methods=['GET'])
 def listar_nubes():
-    try:        
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT nubeID, nombre, descripcion, archivo_tipo, fecha FROM nubes_de_puntos ORDER BY fecha DESC")
-        nubes = cursor.fetchall()        
-        return jsonify({"nubes": nubes}), 200
-    except Exception as e:        
+    db: Session = SessionLocal()
+    try:
+        nubes = db.query(NubeDePuntos).order_by(NubeDePuntos.fecha.desc()).all()
+        resultado = [
+            {
+                "nubeID": n.nubeID,
+                "nombre": n.nombre,
+                "descripcion": n.descripcion,
+                "archivo_tipo": n.archivo_tipo,
+                "nombre_archivo": n.nombre_archivo,
+                "fecha": n.fecha.isoformat()
+            } for n in nubes
+        ]
+        return jsonify({"nubes": resultado}), 200
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        if conn:
-            conn.close()
+        db.close()
 
 #-------------------------------------------------------------------------------
 
 @app.route('/api/nube_puntos/<int:id>', methods=['GET'])
 def descargar_nube(id):
+    db: Session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT nube_datos, nombre, archivo_tipo FROM nubes_de_puntos WHERE nubeID = %s", (id,))
-        nube = cursor.fetchone()
-        cursor.close()
-        conn.close()
-
+        nube = db.get(NubeDePuntos, id)
         if not nube:
             return jsonify({"error": "Nube no encontrada"}), 404
 
-        extension = nube['archivo_tipo']
-        nombre_archivo = f"{nube['nombre']}.{extension}"
+        extension = nube.archivo_tipo
+        nombre_archivo = f"{nube.nombre}.{extension}"
 
         return send_file(
-            io.BytesIO(nube["nube_datos"]),
+            io.BytesIO(nube.nube_datos),
             mimetype='application/octet-stream',
             download_name=nombre_archivo,
             as_attachment=False
         )
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+#-------------------------------------------------------------------------------
+
+@app.route('/api/nube_puntos/<int:id>/info', methods=['GET'])
+def obtener_info_nube(id):
+    db: Session = SessionLocal()
+    try:
+        nube = db.get(NubeDePuntos, id)
+        if not nube:
+            return jsonify({"error": "Nube no encontrada"}), 404
+
+        return jsonify({
+            "nubeID": nube.nubeID,
+            "nombre": nube.nombre,
+            "descripcion": nube.descripcion,
+            "archivo_tipo": nube.archivo_tipo,
+            "nombre_archivo": nube.nombre_archivo,
+            "fecha": nube.fecha.isoformat()
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
 
 #-------------------------------------------------------------------------------
 
 @app.route('/api/nube_puntos/<int:id>', methods=['DELETE'])
 def eliminar_nube(id):
+    db: Session = SessionLocal()
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM nubes_de_puntos WHERE nubeID = %s", (id,))
-        conn.commit()
-        conn.close()
-
-        if cursor.rowcount == 0:
+        nube = db.query(NubeDePuntos).get(id)
+        if not nube:
             return jsonify({"error": "Nube no encontrada"}), 404
 
+        db.delete(nube)
+        db.commit()
         return jsonify({"mensaje": "Nube eliminada"}), 200
-
     except Exception as e:
+        db.rollback()
         return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
 
 #-------------------------------------------------------------------------------
 

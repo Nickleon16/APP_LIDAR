@@ -1,33 +1,48 @@
 # visualizacion_node.py
 
 import os
-import tempfile
-from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem, QFileDialog
-from PyQt5.QtCore import Qt
-from visualizacion_ui import Ui_Form
-import requests
+import numpy as np
 import open3d as o3d
-import subprocess
+import requests
+
+from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem, QFileDialog, QVBoxLayout
+from PyQt5.QtCore import Qt
+
+from visualizacion_ui import Ui_Form
+
+import pyvista as pv
+from pyvistaqt import QtInteractor
+
+import tempfile
 
 from fpdf import FPDF
-import laspy
-import numpy as np
-
 
 class VisualizacionWidget(QWidget):
-    def __init__(self, user_id):
+    def __init__(self, user_id, lista_nubes):
         super().__init__()
         self.user_id = user_id
+        self.lista_nubes = lista_nubes
         self.ui = Ui_Form()
         self.ui.setupUi(self)
 
+        # Embebemos PyVista en el QWidget definido en Qt Designer
+        self.pv_layout = QVBoxLayout(self.ui.vtkWidget)
+        self.plotter = QtInteractor(self.ui.vtkWidget)
+        self.pv_layout.addWidget(self.plotter)
+
+        # Conectar botones
         self.ui.subirNubePushButton.clicked.connect(self.subir_nube_puntos)
         self.ui.verNubePushButton.clicked.connect(self.visualizar_nube)
         self.ui.borrarNubePushButton.clicked.connect(self.eliminar_nube)
-        self.cargar_lista_nubes()
-
         self.ui.generarReportePushButton.clicked.connect(self.generar_reporte_pdf)
 
+        self.actualizar_lista_externa(self.lista_nubes)
+
+#-----------------------------------------------------------------------------
+
+    def actualizar_lista_externa(self, nueva_lista):
+        self.lista_nubes = nueva_lista
+        self.cargar_lista_nubes()
 
 #-----------------------------------------------------------------------------
 
@@ -67,37 +82,86 @@ class VisualizacionWidget(QWidget):
 #-----------------------------------------------------------------------------
 
     def cargar_lista_nubes(self):
-        try:
-            response = requests.get("http://127.0.0.1:5000/api/nube_puntos")
-            if response.status_code == 200:
-                nubes = response.json().get("nubes", [])
-                self.ui.nubesListWidget.clear()
-                for n in nubes:
-                    item = QListWidgetItem(f"{n['nubeID']} - {n['nombre']}")
-                    item.setData(Qt.UserRole, n['nubeID'])
-                    self.ui.nubesListWidget.addItem(item)
-            else:
-                QMessageBox.warning(self, "Error", "No se pudieron cargar las nubes.")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error al conectar: {str(e)}")
+        self.ui.nubesListWidget.clear()
+        for n in self.lista_nubes:
+            item = QListWidgetItem(f"{n['nubeID']} - {n['nombre']}")
+            item.setData(Qt.UserRole, n["nubeID"])
+            self.ui.nubesListWidget.addItem(item)
 
 #-----------------------------------------------------------------------------
-    
-    def visualizar_nube(self, nube_id):            
-        nube_id = self.ui.nubesListWidget.currentItem().data(Qt.UserRole)
-        try:
-            response = requests.get(f"http://127.0.0.1:5000/api/nube_puntos/{nube_id}")
-            if response.status_code == 200:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".pcd") as tmp_file:
-                    tmp_file.write(response.content)
-                    tmp_path = tmp_file.name
 
-                # Llama a otro script que visualiza sin Qt ni ROS
-                subprocess.Popen(["python3", "visualizador_nubes.py", tmp_path])
-            else:
-                QMessageBox.warning(self, "Error", "No se pudo descargar la nube.")
+    def visualizar_nube(self):
+        try:
+            # Obtener ítem seleccionado
+            item = self.ui.nubesListWidget.currentItem()
+            if not item:
+                QMessageBox.warning(self, "Advertencia", "Selecciona una nube primero.")
+                return
+
+            nube_id = item.data(Qt.UserRole)
+
+            # Obtener metadatos
+            meta_response = requests.get(f"http://127.0.0.1:5000/api/nube_puntos/{nube_id}/info")
+            if meta_response.status_code != 200:
+                QMessageBox.critical(self, "Error", "No se pudo obtener la información de la nube.")
+                return
+
+            meta = meta_response.json()
+            nombre = meta["nombre"]
+            extension = meta["archivo_tipo"]
+            descripcion = meta.get("descripcion", "")
+            fecha = meta.get("fecha", "Desconocida")
+
+            # Mostrar descripción y nombre en los campos
+            self.ui.descripcionNubeTextEdit.setPlainText(descripcion)
+            self.ui.fechaLineEdit.setText(fecha)
+
+
+            # Descargar archivo
+            response = requests.get(f"http://127.0.0.1:5000/api/nube_puntos/{nube_id}")
+            if response.status_code != 200:
+                QMessageBox.critical(self, "Error", f"Error al visualizar: {response.text}")
+                return
+
+            # Guardar temporal
+            with tempfile.NamedTemporaryFile(delete=False, suffix=f".{extension}") as tmp:
+                tmp.write(response.content)
+                tmp_path = tmp.name
+
+            # Leer y convertir con Open3D
+            pcd = o3d.io.read_point_cloud(tmp_path)
+            puntos = np.asarray(pcd.points)
+            os.remove(tmp_path)
+
+            if puntos.size == 0:
+                QMessageBox.warning(self, "Advertencia", f"La nube '{nombre}' está vacía.")
+                return
+
+            # Crear visualización con PyVista
+            cloud = pv.PolyData(puntos)
+            z = puntos[:, 2]
+            z -= z.min()  # Asegurar que no haya valores negativos
+            cloud["altura"] = z
+
+            self.plotter.clear()
+            self.plotter.add_mesh(
+                cloud,
+                scalars="altura",
+                cmap="viridis",
+                point_size=3,
+                render_points_as_spheres=True,
+                scalar_bar_args={
+                    "title": "Profundidad (m)",
+                    "vertical": True,
+                    "title_font_size": 12,
+                    "label_font_size": 10
+                }
+            )
+            self.plotter.reset_camera()
+            self.plotter.render()
+
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error al visualizar: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Error al visualizar la nube: {str(e)}")
 
 #-----------------------------------------------------------------------------
 
