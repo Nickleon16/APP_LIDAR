@@ -16,6 +16,7 @@ from pyvistaqt import QtInteractor
 import tempfile
 
 from fpdf import FPDF
+import laspy
 
 class VisualizacionWidget(QWidget):
     def __init__(self, user_id, lista_nubes):
