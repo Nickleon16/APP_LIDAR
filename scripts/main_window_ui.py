@@ -23,13 +23,13 @@ class Ui_MainWindow(object):
         self.label = QtWidgets.QLabel(MainWindow)
         self.label.setGeometry(QtCore.QRect(1080, 620, 201, 71))
         self.label.setText("")
-        self.label.setPixmap(QtGui.QPixmap(":/images/psi.png"))
+        self.label.setPixmap(QtGui.QPixmap(":/iconos/iconos/psi.png"))
         self.label.setScaledContents(True)
         self.label.setObjectName("label")
         self.label_2 = QtWidgets.QLabel(MainWindow)
         self.label_2.setGeometry(QtCore.QRect(1300, 620, 51, 71))
         self.label_2.setText("")
-        self.label_2.setPixmap(QtGui.QPixmap(":/images/univalle.png"))
+        self.label_2.setPixmap(QtGui.QPixmap(":/iconos/iconos/univalle.png"))
         self.label_2.setScaledContents(True)
         self.label_2.setObjectName("label_2")
 
@@ -41,4 +41,4 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("MainWindow", "Captura"))
-import resources_rc
+import iconos_rc

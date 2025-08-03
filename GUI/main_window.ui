@@ -44,7 +44,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap resource="resources.qrc">:/images/psi.png</pixmap>
+    <pixmap resource="iconos.qrc">:/iconos/iconos/psi.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -63,7 +63,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap resource="resources.qrc">:/images/univalle.png</pixmap>
+    <pixmap resource="iconos.qrc">:/iconos/iconos/univalle.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -71,7 +71,7 @@
   </widget>
  </widget>
  <resources>
-  <include location="resources.qrc"/>
+  <include location="iconos.qrc"/>
  </resources>
  <connections/>
 </ui>

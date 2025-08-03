@@ -42,11 +42,11 @@ class UserRegistrationWidget(QWidget):
 
         admin = self.ui.adminRadioButton.isChecked()
         operario = self.ui.operaRadioButton.isChecked()
-        rol = "Administrador" if admin else "Operario"
+        rol = "Administrador" if admin else "Operador"
 
         activo = self.ui.activoRadioButton.isChecked()
         inactivo = self.ui.inactivoRadioButton.isChecked()
-        status = "Activo" if activo else "No activo"
+        status = "Activo" if activo else "Inactivo"
 
         if (activo and inactivo) or (admin and operario):
             self.ui.statusLabel.setText("Selecciona solo un rol y un estado.")
@@ -94,7 +94,7 @@ class UserRegistrationWidget(QWidget):
                 except ValueError:
                     error_msg = response.text or "Respuesta vacía del servidor"
 
-                self.ui.statusLabel.setText(f"Error: {error_msg}")
+                self.ui.statusLabel.setText(f"Error: usuario no valido")
 
         except Exception as e:
             self.ui.statusLabel.setText(f"Error al conectar: {str(e)}")
@@ -165,11 +165,11 @@ class UserRegistrationWidget(QWidget):
 
         # Rol
         self.ui.adminRadioButton.setChecked(user.get("rol") == "Administrador")
-        self.ui.operaRadioButton.setChecked(user.get("rol") == "Operario")
+        self.ui.operaRadioButton.setChecked(user.get("rol") == "Operador")
 
         # Estado
         self.ui.activoRadioButton.setChecked(user.get("status") == "Activo")
-        self.ui.inactivoRadioButton.setChecked(user.get("status") == "No activo")
+        self.ui.inactivoRadioButton.setChecked(user.get("status") == "Inactivo")
 
 #----------------------------------------------------------------------------------
 

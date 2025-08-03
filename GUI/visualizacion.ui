@@ -7,144 +7,66 @@
     <x>0</x>
     <y>0</y>
     <width>1330</width>
-    <height>552</height>
+    <height>570</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QLabel" name="label_4">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>131</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Nubes disponibes:</string>
-   </property>
-  </widget>
   <widget class="QListWidget" name="nubesListWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>30</y>
+     <y>80</y>
      <width>251</width>
      <height>481</height>
     </rect>
    </property>
-  </widget>
-  <widget class="QLineEdit" name="nombreNubeLineEdit">
-   <property name="geometry">
-    <rect>
-     <x>1200</x>
-     <y>70</y>
-     <width>113</width>
-     <height>25</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="descripcionNubeLineEdit">
-   <property name="geometry">
-    <rect>
-     <x>1200</x>
-     <y>110</y>
-     <width>113</width>
-     <height>25</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="borrarNubePushButton">
-   <property name="geometry">
-    <rect>
-     <x>160</x>
-     <y>520</y>
-     <width>101</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Borrar nube</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_3">
-   <property name="geometry">
-    <rect>
-     <x>1070</x>
-     <y>30</y>
-     <width>171</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Subir nubes de puntos:</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="subirNubePushButton">
-   <property name="geometry">
-    <rect>
-     <x>1220</x>
-     <y>160</y>
-     <width>89</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Subir nube</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label">
-   <property name="geometry">
-    <rect>
-     <x>1070</x>
-     <y>70</y>
-     <width>101</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Nombre nube:</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_2">
-   <property name="geometry">
-    <rect>
-     <x>1070</x>
-     <y>110</y>
-     <width>131</width>
-     <height>17</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Descripcion nube:</string>
+   <property name="selectionMode">
+    <enum>QAbstractItemView::MultiSelection</enum>
    </property>
   </widget>
   <widget class="QPushButton" name="verNubePushButton">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>520</y>
-     <width>131</width>
-     <height>25</height>
+     <x>210</x>
+     <y>20</y>
+     <width>51</width>
+     <height>51</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Visualizar nube seleccionada</string>
+   </property>
    <property name="text">
-    <string>Visualizar nube</string>
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset resource="iconos.qrc">
+     <normaloff>:/newPrefix/icons8-eye-90.png</normaloff>:/newPrefix/icons8-eye-90.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
    </property>
   </widget>
   <widget class="QPushButton" name="generarReportePushButton">
    <property name="geometry">
     <rect>
-     <x>1070</x>
-     <y>160</y>
+     <x>1180</x>
+     <y>20</y>
      <width>131</width>
      <height>25</height>
     </rect>
    </property>
    <property name="text">
     <string>Exportar PDF</string>
+   </property>
+   <property name="icon">
+    <iconset resource="iconos.qrc">
+     <normaloff>:/newPrefix/icons8-menu-60.png</normaloff>:/newPrefix/icons8-menu-60.png</iconset>
    </property>
   </widget>
   <widget class="QWidget" name="vtkWidget" native="true">
@@ -153,7 +75,7 @@
      <x>280</x>
      <y>30</y>
      <width>771</width>
-     <height>531</height>
+     <height>521</height>
     </rect>
    </property>
    <property name="cursor">
@@ -164,7 +86,7 @@
    <property name="geometry">
     <rect>
      <x>1070</x>
-     <y>270</y>
+     <y>350</y>
      <width>131</width>
      <height>17</height>
     </rect>
@@ -177,7 +99,7 @@
    <property name="geometry">
     <rect>
      <x>1070</x>
-     <y>300</y>
+     <y>380</y>
      <width>231</width>
      <height>111</height>
     </rect>
@@ -187,7 +109,7 @@
    <property name="geometry">
     <rect>
      <x>1070</x>
-     <y>420</y>
+     <y>500</y>
      <width>67</width>
      <height>17</height>
     </rect>
@@ -200,29 +122,84 @@
    <property name="geometry">
     <rect>
      <x>1070</x>
-     <y>450</y>
+     <y>530</y>
      <width>231</width>
      <height>25</height>
     </rect>
    </property>
   </widget>
+  <widget class="QFrame" name="frame">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>20</y>
+     <width>791</width>
+     <height>541</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_10">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>50</y>
+     <width>111</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Yrsa</family>
+     <pointsize>15</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>disponibes:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>30</y>
+     <width>151</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Yrsa</family>
+     <pointsize>15</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Nubes</string>
+   </property>
+  </widget>
+  <zorder>frame</zorder>
   <zorder>vtkWidget</zorder>
-  <zorder>label_4</zorder>
   <zorder>nubesListWidget</zorder>
-  <zorder>nombreNubeLineEdit</zorder>
-  <zorder>descripcionNubeLineEdit</zorder>
-  <zorder>borrarNubePushButton</zorder>
-  <zorder>label_3</zorder>
-  <zorder>subirNubePushButton</zorder>
-  <zorder>label</zorder>
-  <zorder>label_2</zorder>
   <zorder>verNubePushButton</zorder>
   <zorder>generarReportePushButton</zorder>
   <zorder>label_5</zorder>
   <zorder>descripcionNubeTextEdit</zorder>
   <zorder>label_6</zorder>
   <zorder>fechaLineEdit</zorder>
+  <zorder>label_10</zorder>
+  <zorder>label_4</zorder>
  </widget>
- <resources/>
+ <resources>
+  <include location="iconos.qrc"/>
+ </resources>
  <connections/>
 </ui>

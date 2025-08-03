@@ -1,7 +1,9 @@
 <RCC>
   <qresource prefix="/images">
     <file>resources.qrc</file>
-    <file>psi.png</file>
-    <file>univalle.png</file>
+  </qresource>
+  <qresource prefix="iconos">
+    <file>iconos/psi.png</file>
+    <file>iconos/univalle.png</file>
   </qresource>
 </RCC>

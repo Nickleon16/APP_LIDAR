@@ -17,10 +17,18 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>10</y>
+     <y>20</y>
      <width>131</width>
      <height>17</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Yrsa</family>
+     <pointsize>15</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
    </property>
    <property name="text">
     <string>Lista de presets:</string>
@@ -32,7 +40,7 @@
      <x>10</x>
      <y>40</y>
      <width>231</width>
-     <height>411</height>
+     <height>461</height>
     </rect>
    </property>
   </widget>
@@ -40,7 +48,7 @@
    <property name="geometry">
     <rect>
      <x>260</x>
-     <y>350</y>
+     <y>290</y>
      <width>201</width>
      <height>25</height>
     </rect>
@@ -52,14 +60,27 @@
   <widget class="QPushButton" name="confirmarPushButton">
    <property name="geometry">
     <rect>
-     <x>260</x>
-     <y>270</y>
-     <width>111</width>
-     <height>25</height>
+     <x>330</x>
+     <y>230</y>
+     <width>51</width>
+     <height>51</height>
     </rect>
    </property>
-   <property name="text">
+   <property name="toolTip">
     <string>Guardar preset</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset resource="iconos.qrc">
+     <normaloff>:/newPrefix/icons8-save-60.png</normaloff>:/newPrefix/icons8-save-60.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
    </property>
   </widget>
   <widget class="QPushButton" name="nuevoPresetButton">
@@ -67,32 +88,58 @@
     <rect>
      <x>260</x>
      <y>230</y>
-     <width>111</width>
-     <height>25</height>
+     <width>51</width>
+     <height>51</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Limpiar campos</string>
+   </property>
    <property name="text">
-    <string>Nuevo preset</string>
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset resource="iconos.qrc">
+     <normaloff>:/newPrefix/icons8-clean-60.png</normaloff>:/newPrefix/icons8-clean-60.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
    </property>
   </widget>
   <widget class="QPushButton" name="eliminarPresetpushButton">
    <property name="geometry">
     <rect>
-     <x>260</x>
-     <y>310</y>
-     <width>111</width>
-     <height>25</height>
+     <x>10</x>
+     <y>510</y>
+     <width>51</width>
+     <height>51</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Borrar preset seleccionado</string>
+   </property>
    <property name="text">
-    <string>Eliminar preset</string>
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset resource="iconos.qrc">
+     <normaloff>:/newPrefix/icons8-delete-60.png</normaloff>:/newPrefix/icons8-delete-60.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
    </property>
   </widget>
   <widget class="QLineEdit" name="nombrePresetLineEdit">
    <property name="geometry">
     <rect>
      <x>260</x>
-     <y>40</y>
+     <y>50</y>
      <width>201</width>
      <height>25</height>
     </rect>
@@ -102,7 +149,7 @@
    <property name="geometry">
     <rect>
      <x>260</x>
-     <y>10</y>
+     <y>20</y>
      <width>111</width>
      <height>17</height>
     </rect>
@@ -115,7 +162,7 @@
    <property name="geometry">
     <rect>
      <x>260</x>
-     <y>80</y>
+     <y>90</y>
      <width>101</width>
      <height>17</height>
     </rect>
@@ -127,7 +174,7 @@
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>950</x>
+     <x>520</x>
      <y>20</y>
      <width>251</width>
      <height>141</height>
@@ -266,7 +313,7 @@
   <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
     <rect>
-     <x>950</x>
+     <x>520</x>
      <y>180</y>
      <width>321</width>
      <height>191</height>
@@ -480,14 +527,14 @@
   <widget class="QGroupBox" name="groupBox_3">
    <property name="geometry">
     <rect>
-     <x>950</x>
+     <x>520</x>
      <y>400</y>
      <width>341</width>
      <height>161</height>
     </rect>
    </property>
    <property name="title">
-    <string>Pre-procesamiento:</string>
+    <string>Compensación:</string>
    </property>
    <widget class="QLabel" name="label_53">
     <property name="geometry">
@@ -499,7 +546,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Compensacion de movimiento:</string>
+     <string>Compensación de movimiento:</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_52">
@@ -623,13 +670,15 @@
    <property name="geometry">
     <rect>
      <x>260</x>
-     <y>110</y>
+     <y>120</y>
      <width>201</width>
      <height>101</height>
     </rect>
    </property>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="iconos.qrc"/>
+ </resources>
  <connections/>
 </ui>

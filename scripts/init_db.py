@@ -20,8 +20,8 @@ def crear_usuario_admin():
             nuevo_admin = Usuario(
                 nombre='Administrador del sistema',
                 email='admin@example.com',
-                username='a',
-                password='a',
+                username='admin',
+                password='admin',
                 rol='Administrador',
                 user_status='Activo'
             )
@@ -47,7 +47,7 @@ def crear_parametros_por_defecto():
                 descripcion="Parámetros por defecto",
                 velocidad_maxima=2.0,
                 velocidad_lineal=1.0,
-                velocidad_angular=0.5,
+                velocidad_angular=1.0,
                 tasa_muestreo=10,
                 campo_vision=180.0,
                 #resolucion="Alta",

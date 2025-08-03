@@ -28,7 +28,7 @@ class ParametrosWidget(QWidget):
         data = {
             "usuario_id": self.user_id,
             "nombre_preset": self.ui.nombrePresetLineEdit.text(),
-            "descripcion": self.ui.descripcionTextEdit.text(),
+            "descripcion": self.ui.descripcionTextEdit.toPlainText(),
 
             "velocidad_maxima": self.ui.velMaxSpinBox.value(),
             "velocidad_lineal": self.ui.velLineSpinBox.value(),
@@ -164,3 +164,8 @@ class ParametrosWidget(QWidget):
                 QMessageBox.warning(self, "Error", response.text)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error al conectar: {str(e)}")
+
+#----------------------------------------------------------------------------------
+
+    def obtener_parametro_seleccionado(self):
+        return self.parametro_id

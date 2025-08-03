@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>280</x>
-     <y>10</y>
+     <y>20</y>
      <width>161</width>
      <height>17</height>
     </rect>
@@ -30,7 +30,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>30</y>
+     <y>80</y>
      <width>251</width>
      <height>481</height>
     </rect>
@@ -43,26 +43,26 @@
    <property name="geometry">
     <rect>
      <x>280</x>
-     <y>300</y>
-     <width>131</width>
-     <height>25</height>
+     <y>290</y>
+     <width>51</width>
+     <height>51</height>
     </rect>
    </property>
-   <property name="text">
-    <string>Procesar nube</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_4">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>131</width>
-     <height>17</height>
-    </rect>
+   <property name="toolTip">
+    <string>Porcesar nube seleccionada</string>
    </property>
    <property name="text">
-    <string>Nubes disponibes:</string>
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset resource="iconos.qrc">
+     <normaloff>:/newPrefix/icons8-services-90.png</normaloff>:/newPrefix/icons8-services-90.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
    </property>
   </widget>
   <widget class="QCheckBox" name="filtroRuidoCheckBox">
@@ -239,19 +239,6 @@
     </property>
    </widget>
   </widget>
-  <widget class="QPushButton" name="actualizarListaPushButton">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>530</y>
-     <width>131</width>
-     <height>25</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Actualizar lista</string>
-   </property>
-  </widget>
   <widget class="QFrame" name="segmentacionFrame">
    <property name="geometry">
     <rect>
@@ -361,14 +348,27 @@
   <widget class="QPushButton" name="guardarProcesadaPushButton">
    <property name="geometry">
     <rect>
-     <x>280</x>
-     <y>340</y>
-     <width>131</width>
-     <height>25</height>
+     <x>350</x>
+     <y>290</y>
+     <width>51</width>
+     <height>51</height>
     </rect>
    </property>
+   <property name="toolTip">
+    <string>Guardar nube procesada</string>
+   </property>
    <property name="text">
-    <string>Guardar proce.</string>
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset resource="iconos.qrc">
+     <normaloff>:/newPrefix/icons8-save-60.png</normaloff>:/newPrefix/icons8-save-60.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
    </property>
   </widget>
   <widget class="QLabel" name="label_9">
@@ -400,7 +400,140 @@
     <enum>Qt::LeftToRight</enum>
    </property>
   </widget>
+  <widget class="QPushButton" name="borrarNubePushButton">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>20</y>
+     <width>51</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Borrar nube seleccionada</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset resource="iconos.qrc">
+     <normaloff>:/newPrefix/icons8-delete-60.png</normaloff>:/newPrefix/icons8-delete-60.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>32</height>
+    </size>
+   </property>
+  </widget>
+  <widget class="QFrame" name="frame">
+   <property name="geometry">
+    <rect>
+     <x>640</x>
+     <y>4</y>
+     <width>681</width>
+     <height>571</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <property name="lineWidth">
+    <number>4</number>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="subirNubePushButton">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>20</y>
+     <width>51</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Subir nueva nube</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="icon">
+    <iconset resource="iconos.qrc">
+     <normaloff>:/newPrefix/icons8-plus-math-60.png</normaloff>:/newPrefix/icons8-plus-math-60.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>32</width>
+     <height>33</height>
+    </size>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_4">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>30</y>
+     <width>151</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Yrsa</family>
+     <pointsize>15</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Nubes</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_10">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>50</y>
+     <width>111</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Yrsa</family>
+     <pointsize>15</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>disponibes:</string>
+   </property>
+  </widget>
+  <zorder>frame</zorder>
+  <zorder>label_7</zorder>
+  <zorder>nubesListWidget</zorder>
+  <zorder>procesarNubePushButton</zorder>
+  <zorder>filtroRuidoCheckBox</zorder>
+  <zorder>downsamplingCheckBox</zorder>
+  <zorder>alineacionCheckBox</zorder>
+  <zorder>segmentacionCheckBox</zorder>
+  <zorder>filtradoRuidoFrame</zorder>
+  <zorder>downsamplingFrame</zorder>
+  <zorder>segmentacionFrame</zorder>
+  <zorder>guardarProcesadaPushButton</zorder>
+  <zorder>label_9</zorder>
+  <zorder>vistaProcesamientoWidget</zorder>
+  <zorder>borrarNubePushButton</zorder>
+  <zorder>subirNubePushButton</zorder>
+  <zorder>label_4</zorder>
+  <zorder>label_10</zorder>
  </widget>
- <resources/>
+ <resources>
+  <include location="iconos.qrc"/>
+ </resources>
  <connections/>
 </ui>

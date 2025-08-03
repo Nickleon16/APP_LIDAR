@@ -3,6 +3,7 @@
 from PyQt5.QtWidgets import QWidget, QMessageBox, QLineEdit
 from login_ui import Ui_loginWindow
 import requests 
+import iconos_rc 
 
 class LoginWindow(QWidget):
     def __init__(self, switch_window_callback):

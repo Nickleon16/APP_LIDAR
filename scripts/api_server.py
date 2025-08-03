@@ -97,6 +97,28 @@ def obtener_usuarios():
 
 #-------------------------------------------------------------------------------
 
+@app.route('/api/usuario/<int:user_id>', methods=['GET'])
+def obtener_usuario(user_id):
+    db: Session = SessionLocal()
+    try:
+        u = db.query(Usuario).filter(Usuario.userID == user_id).first()
+        if not u:
+            return jsonify({"error": "Usuario no encontrado"}), 404
+        return jsonify({
+            "userID": u.userID,
+            "nombre": u.nombre,
+            "email": u.email,
+            "username": u.username,
+            "rol": u.rol,
+            "status": u.user_status
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.close()
+
+#-------------------------------------------------------------------------------
+
 @app.route('/api/usuarios/<int:user_id>', methods=['PUT'])
 def update_usuario(user_id):
     db: Session = SessionLocal()
@@ -314,6 +336,7 @@ def subir_nube_puntos():
     nombre = request.form.get('nombre')
     descripcion = request.form.get('descripcion')
     nombre_archivo = request.form.get('nombre_archivo')
+    parametroID = request.form.get("parametroID")
 
     if not archivo:
         return jsonify({"error": "No se envió archivo"}), 400
@@ -328,7 +351,8 @@ def subir_nube_puntos():
             descripcion=descripcion,
             archivo_tipo=tipo,
             nombre_archivo=nombre_archivo,
-            nube_datos=datos
+            nube_datos=datos,
+            parametroID=parametroID if parametroID else None
         )
         db.add(nube)
         db.commit()
@@ -401,6 +425,7 @@ def obtener_info_nube(id):
             "descripcion": nube.descripcion,
             "archivo_tipo": nube.archivo_tipo,
             "nombre_archivo": nube.nombre_archivo,
+            "parametroID": nube.parametroID,
             "fecha": nube.fecha.isoformat()
         }), 200
     except Exception as e:

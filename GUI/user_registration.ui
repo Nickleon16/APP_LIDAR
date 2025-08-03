@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>849</width>
-    <height>469</height>
+    <width>1330</width>
+    <height>575</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <weight>50</weight>
+    <bold>false</bold>
+   </font>
   </property>
   <property name="windowTitle">
    <string>Form</string>
@@ -19,8 +25,16 @@
      <x>360</x>
      <y>20</y>
      <width>461</width>
-     <height>371</height>
+     <height>401</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Yrsa</family>
+     <pointsize>15</pointsize>
+     <weight>75</weight>
+     <bold>true</bold>
+    </font>
    </property>
    <property name="title">
     <string>Formulario </string>
@@ -29,10 +43,18 @@
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>210</y>
+      <y>230</y>
       <width>91</width>
       <height>17</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>ID asignado:</string>
@@ -47,6 +69,14 @@
       <height>25</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>Yrsa</family>
+      <pointsize>13</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -60,6 +90,14 @@
       <height>25</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>Yrsa</family>
+      <pointsize>13</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
     <property name="text">
      <string/>
     </property>
@@ -67,24 +105,45 @@
    <widget class="QPushButton" name="clearButton">
     <property name="geometry">
      <rect>
-      <x>260</x>
-      <y>290</y>
-      <width>89</width>
-      <height>25</height>
+      <x>330</x>
+      <y>320</y>
+      <width>51</width>
+      <height>51</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>Limpiar campos</string>
+    </property>
     <property name="text">
-     <string>Limpiar</string>
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="iconos.qrc">
+      <normaloff>:/newPrefix/icons8-clean-60.png</normaloff>:/newPrefix/icons8-clean-60.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>32</width>
+      <height>32</height>
+     </size>
     </property>
    </widget>
    <widget class="QLabel" name="IDLabel">
     <property name="geometry">
      <rect>
       <x>360</x>
-      <y>210</y>
+      <y>230</y>
       <width>101</width>
       <height>17</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>No asignado</string>
@@ -94,10 +153,18 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>290</y>
+      <y>310</y>
       <width>91</width>
       <height>17</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>Contraseña:</string>
@@ -107,10 +174,18 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>340</y>
+      <y>360</y>
       <width>421</width>
       <height>17</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>Ingrese datos</string>
@@ -120,10 +195,18 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>250</y>
+      <y>270</y>
       <width>91</width>
       <height>17</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>Contraseña:</string>
@@ -133,10 +216,18 @@
     <property name="geometry">
      <rect>
       <x>130</x>
-      <y>210</y>
+      <y>230</y>
       <width>113</width>
       <height>25</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Yrsa</family>
+      <pointsize>13</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
     </property>
     <property name="text">
      <string/>
@@ -145,24 +236,45 @@
    <widget class="QPushButton" name="registerButton">
     <property name="geometry">
      <rect>
-      <x>360</x>
-      <y>290</y>
-      <width>89</width>
-      <height>25</height>
+      <x>390</x>
+      <y>320</y>
+      <width>51</width>
+      <height>51</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>Guardar usuario</string>
+    </property>
     <property name="text">
-     <string>Registrar</string>
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="iconos.qrc">
+      <normaloff>:/newPrefix/icons8-save-60.png</normaloff>:/newPrefix/icons8-save-60.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>32</width>
+      <height>32</height>
+     </size>
     </property>
    </widget>
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>210</y>
+      <y>230</y>
       <width>67</width>
       <height>17</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>Usuario:</string>
@@ -177,6 +289,14 @@
       <height>17</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
     <property name="text">
      <string>Nombre:</string>
     </property>
@@ -190,6 +310,14 @@
       <height>17</height>
      </rect>
     </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
     <property name="text">
      <string>Correo:</string>
     </property>
@@ -198,10 +326,18 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>120</y>
+      <y>130</y>
       <width>91</width>
       <height>17</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>Rol:</string>
@@ -211,20 +347,36 @@
     <property name="geometry">
      <rect>
       <x>130</x>
-      <y>290</y>
+      <y>310</y>
       <width>113</width>
       <height>25</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Yrsa</family>
+      <pointsize>13</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
     </property>
    </widget>
    <widget class="QLineEdit" name="passwordLineEdit">
     <property name="geometry">
      <rect>
       <x>130</x>
-      <y>250</y>
+      <y>270</y>
       <width>113</width>
       <height>25</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Yrsa</family>
+      <pointsize>13</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
     </property>
    </widget>
    <widget class="QGroupBox" name="groupBox">
@@ -233,7 +385,7 @@
       <x>130</x>
       <y>90</y>
       <width>281</width>
-      <height>61</height>
+      <height>71</height>
      </rect>
     </property>
     <property name="title">
@@ -243,10 +395,18 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>30</y>
+       <y>40</y>
        <width>121</width>
        <height>23</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Ubuntu</family>
+       <pointsize>11</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
      <property name="text">
       <string>Administrador</string>
@@ -255,11 +415,19 @@
     <widget class="QRadioButton" name="operaRadioButton">
      <property name="geometry">
       <rect>
-       <x>140</x>
-       <y>30</y>
+       <x>150</x>
+       <y>40</y>
        <width>112</width>
        <height>23</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Ubuntu</family>
+       <pointsize>11</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
      <property name="text">
       <string>Operario</string>
@@ -272,7 +440,7 @@
       <x>130</x>
       <y>140</y>
       <width>281</width>
-      <height>61</height>
+      <height>71</height>
      </rect>
     </property>
     <property name="title">
@@ -282,10 +450,18 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>30</y>
+       <y>40</y>
        <width>112</width>
        <height>23</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Ubuntu</family>
+       <pointsize>11</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
      <property name="text">
       <string>Activo</string>
@@ -294,11 +470,19 @@
     <widget class="QRadioButton" name="inactivoRadioButton">
      <property name="geometry">
       <rect>
-       <x>140</x>
-       <y>30</y>
+       <x>150</x>
+       <y>40</y>
        <width>112</width>
        <height>23</height>
       </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Ubuntu</family>
+       <pointsize>11</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
      </property>
      <property name="text">
       <string>Inactivo</string>
@@ -309,66 +493,158 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>170</y>
+      <y>180</y>
       <width>91</width>
       <height>17</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu</family>
+      <pointsize>11</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
     </property>
     <property name="text">
      <string>Estado:</string>
     </property>
    </widget>
+   <zorder>groupBox_2</zorder>
+   <zorder>groupBox</zorder>
+   <zorder>label_10</zorder>
+   <zorder>nameLineEdit</zorder>
+   <zorder>clearButton</zorder>
+   <zorder>IDLabel</zorder>
+   <zorder>label_4</zorder>
+   <zorder>statusLabel</zorder>
+   <zorder>label_2</zorder>
+   <zorder>usernameLineEdit</zorder>
+   <zorder>registerButton</zorder>
+   <zorder>label</zorder>
+   <zorder>label_3</zorder>
+   <zorder>label_6</zorder>
+   <zorder>label_5</zorder>
+   <zorder>confirmLineEdit</zorder>
+   <zorder>passwordLineEdit</zorder>
+   <zorder>label_7</zorder>
+   <zorder>emailLineEdit</zorder>
   </widget>
   <widget class="QGroupBox" name="lista_usuarios_box">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>20</y>
-     <width>331</width>
-     <height>371</height>
+     <width>341</width>
+     <height>531</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Yrsa</family>
+     <pointsize>15</pointsize>
+     <weight>75</weight>
+     <italic>false</italic>
+     <bold>true</bold>
+     <underline>false</underline>
+     <strikeout>false</strikeout>
+     <kerning>true</kerning>
+    </font>
    </property>
    <property name="title">
     <string>Lista de usuarios</string>
+   </property>
+   <property name="flat">
+    <bool>false</bool>
    </property>
    <widget class="QTableWidget" name="tableWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>30</y>
-      <width>311</width>
-      <height>291</height>
+      <y>40</y>
+      <width>321</width>
+      <height>421</height>
      </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Ubuntu</family>
+      <pointsize>12</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
+      <underline>false</underline>
+      <strikeout>false</strikeout>
+      <kerning>true</kerning>
+     </font>
     </property>
    </widget>
    <widget class="QPushButton" name="borrarButton">
     <property name="geometry">
      <rect>
-      <x>220</x>
-      <y>330</y>
-      <width>89</width>
-      <height>25</height>
+      <x>278</x>
+      <y>470</y>
+      <width>51</width>
+      <height>51</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>Borrar usuario seleccionado</string>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
     <property name="text">
-     <string>Borrar</string>
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="iconos.qrc">
+      <normaloff>:/newPrefix/icons8-delete-60.png</normaloff>:/newPrefix/icons8-delete-60.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>32</width>
+      <height>32</height>
+     </size>
+    </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
+    <property name="autoDefault">
+     <bool>false</bool>
     </property>
    </widget>
    <widget class="QPushButton" name="editarButton">
     <property name="geometry">
      <rect>
-      <x>110</x>
-      <y>330</y>
-      <width>89</width>
-      <height>25</height>
+      <x>220</x>
+      <y>470</y>
+      <width>51</width>
+      <height>51</height>
      </rect>
     </property>
+    <property name="toolTip">
+     <string>Editar usuario seleccionado</string>
+    </property>
     <property name="text">
-     <string>Editar</string>
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="iconos.qrc">
+      <normaloff>:/newPrefix/icons8-edit-pencil-60.png</normaloff>:/newPrefix/icons8-edit-pencil-60.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>32</width>
+      <height>32</height>
+     </size>
     </property>
    </widget>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="iconos.qrc"/>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

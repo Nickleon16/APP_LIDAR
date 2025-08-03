@@ -65,4 +65,5 @@ class NubeDePuntos(Base):
     archivo_tipo = Column(String(10))
     nombre_archivo = Column(String(255))
     nube_datos = Column(LargeBinary)
+    parametroID = Column(Integer, ForeignKey("parametros.parametroID"), nullable=True)
     fecha = Column(DateTime, default=datetime.utcnow)

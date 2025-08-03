@@ -1,0 +1,23 @@
+<RCC>
+  <qresource prefix="newPrefix">
+    <file>icons8-address-60.png</file>
+    <file>icons8-clean-60.png</file>
+    <file>icons8-close-60.png</file>
+    <file>icons8-delete-60.png</file>
+    <file>icons8-done-60.png</file>
+    <file>icons8-edit-pencil-60.png</file>
+    <file>icons8-eye-90.png</file>
+    <file>icons8-instagram-90.png</file>
+    <file>icons8-less-than-60.png</file>
+    <file>icons8-menu-60.png</file>
+    <file>icons8-plus-math-60.png</file>
+    <file>icons8-refresh-90.png</file>
+    <file>icons8-save-60.png</file>
+    <file>icons8-services-90.png</file>
+    <file>icons8-settings-90.png</file>
+    <file>icons8-user-60.png</file>
+    <file>icons8-delete-60.png</file>
+    <file>psi.png</file>
+    <file>univalle.png</file>
+  </qresource>
+</RCC>
