@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="newPrefix">
+    <file>logoApp.png</file>
+    <file>logoUnivalle.png</file>
     <file>icons8-address-60.png</file>
     <file>icons8-clean-60.png</file>
     <file>icons8-close-60.png</file>
@@ -16,7 +18,6 @@
     <file>icons8-services-90.png</file>
     <file>icons8-settings-90.png</file>
     <file>icons8-user-60.png</file>
-    <file>icons8-delete-60.png</file>
     <file>psi.png</file>
     <file>univalle.png</file>
   </qresource>

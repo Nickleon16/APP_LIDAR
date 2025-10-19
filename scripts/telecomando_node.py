@@ -21,11 +21,17 @@ class TelecomandoWidget(QWidget):
         self.ui.posicionLabel.setText("Posición: (x, y, z)")
         self.ui.velocidadLabel.setText("Velocidad Lineal: 0.0 m/s | Angular: 0.0 rad/s")
 
-        self.ui.avanzarPushButton.clicked.connect(self.avanzar)
-        self.ui.reversaPushButton.clicked.connect(self.retroceder)
-        self.ui.izquierdaPushButton.clicked.connect(self.izquierda)
-        self.ui.derechaPushButton.clicked.connect(self.derecha)
-        self.ui.stopPushButton.clicked.connect(self.stop)
+        self.ui.avanzarPushButton.pressed.connect(self.avanzar)
+        self.ui.avanzarPushButton.released.connect(self.stop)
+
+        self.ui.reversaPushButton.pressed.connect(self.retroceder)
+        self.ui.reversaPushButton.released.connect(self.stop)
+
+        self.ui.izquierdaPushButton.pressed.connect(self.izquierda)
+        self.ui.izquierdaPushButton.released.connect(self.stop)
+
+        self.ui.derechaPushButton.pressed.connect(self.derecha)
+        self.ui.derechaPushButton.released.connect(self.stop)        
 
         # TODO: Acceder a servidor de parametros ROS
         self.speed = 0.2  # m/s
@@ -64,17 +70,26 @@ class TelecomandoWidget(QWidget):
         if event.type() == QEvent.KeyPress:
             key = event.key()
 
+            twist = Twist()
             if key == Qt.Key_W:
-                self.avanzar()
+                twist.linear.x = self.speed
             elif key == Qt.Key_S:
-                self.retroceder()
+                twist.linear.x = -self.speed
             elif key == Qt.Key_A:
-                self.izquierda()
+                twist.angular.z = self.turn
             elif key == Qt.Key_D:
-                self.derecha()
-            elif key == Qt.Key_X:
+                twist.angular.z = -self.turn
+            else:
+                return False  # tecla no relevante
+
+            self.pub.publish(twist)
+            return True
+        
+        elif event.type() == QEvent.KeyRelease:
+            key = event.key()            
+            if key in [Qt.Key_W, Qt.Key_S, Qt.Key_A, Qt.Key_D]:
                 self.stop()
-            return True 
+                return True
 
         return super().eventFilter(obj, event)
     

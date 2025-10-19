@@ -36,11 +36,11 @@ class ProcesamientoWidget(QWidget):
         # Conexiones
         self.ui.filtradoRuidoFrame.setVisible(False)
         self.ui.downsamplingFrame.setVisible(False)
-        self.ui.segmentacionFrame.setVisible(False)
+        self.ui.segmentacionFrame.setVisible(False)        
                 
         self.ui.filtroRuidoCheckBox.stateChanged.connect(self.mostrar_filtrado_ruido)
         self.ui.downsamplingCheckBox.stateChanged.connect(self.mostrar_downsampling)
-        self.ui.segmentacionCheckBox.stateChanged.connect(self.mostrar_segmentacion)
+        self.ui.segmentacionCheckBox.stateChanged.connect(self.mostrar_segmentacion)        
         self.ui.procesarNubePushButton.clicked.connect(self.aplicar_procesamiento)
         self.ui.guardarProcesadaPushButton.clicked.connect(self.guardar_nube_procesada)
         self.ui.borrarNubePushButton.clicked.connect(self.eliminar_nube)
@@ -147,7 +147,7 @@ class ProcesamientoWidget(QWidget):
                 pcd2 = self.procesar_nube(self.descargar_nube(id2))
 
                 if pcd1 is None or pcd2 is None:
-                    QMessageBox.critical(self, "Error", "Error al procesar las nubes.")
+                    QMessageBox.critical(self, "Error", "Al menos una de las nubes está vacía.")
                     return
 
                 threshold = 30
@@ -303,24 +303,28 @@ class ProcesamientoWidget(QWidget):
     def procesar_nube(self, pcd):
         planos_segmentados = []
 
+        # Filtro de ruido
         if self.ui.filtroRuidoCheckBox.isChecked():
             vecinos = int(self.ui.vecinosSpinBox.value())
             std_dev = float(self.ui.devStdSpinBox.value())
             pcd, _ = pcd.remove_statistical_outlier(nb_neighbors=vecinos, std_ratio=std_dev)
 
+        # Downsampling
         if self.ui.downsamplingCheckBox.isChecked():
             voxel_size = float(self.ui.voxelSizeSpinBox.value())
             pcd = pcd.voxel_down_sample(voxel_size=voxel_size)
 
+        # Segmentación        
         if self.ui.segmentacionCheckBox.isChecked():
             num_planos = int(self.ui.numPlanosSpinBox.value())
             distancia = float(self.ui.distanciaSpinBox.value())
             iteraciones = int(self.ui.iteracionesSpinBox.value())
             resto = pcd
-            planos = []
-            colors = [[1, 0, 1], [0, 1, 0], [0, 0, 1], [1, 1, 0], [1, 0, 0], [0, 1, 1]]
+            colors = [[1, 0, 1], [0, 1, 0], [0, 0, 1], [1, 1, 0], [0, 1, 1]]
 
             for i in range(num_planos):
+                if len(resto.points) < 50:
+                    break
                 plane_model, inliers = resto.segment_plane(
                     distance_threshold=distancia,
                     ransac_n=3,
@@ -328,15 +332,17 @@ class ProcesamientoWidget(QWidget):
                 )
                 inlier_cloud = resto.select_by_index(inliers)
                 inlier_cloud.paint_uniform_color(colors[i % len(colors)])
-                planos_segmentados.append(inlier_cloud)
-                planos.append(inlier_cloud)
-                resto = resto.select_by_index(inliers, invert=True)
+                planos_segmentados.append(inlier_cloud)                
+                resto = resto.select_by_index(inliers, invert=True)                
+                pcd_final = planos_segmentados[0]
+                for pc in planos_segmentados[1:]:
+                    pcd_final += pc                    
 
-            pcd = planos[0]
-            for plano in planos[1:]:
-                pcd += plano
+        else:
+            pcd_final = pcd
 
-        return pcd, planos_segmentados
+        return pcd_final, planos_segmentados
+
 
 #-----------------------------------------------------------------------------
 
@@ -364,3 +370,5 @@ class ProcesamientoWidget(QWidget):
                     QMessageBox.warning(self, "Error", f"No se pudo eliminar la nube: {response.text}")
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"Error al eliminar: {str(e)}")
+
+#-----------------------------------------------------------------------------

@@ -16,7 +16,7 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>100</x>
+     <x>90</x>
      <y>50</y>
      <width>67</width>
      <height>17</height>
@@ -29,9 +29,9 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>100</x>
+     <x>90</x>
      <y>90</y>
-     <width>91</width>
+     <width>101</width>
      <height>17</height>
     </rect>
    </property>
@@ -62,9 +62,9 @@
   <widget class="QPushButton" name="confirmButton">
    <property name="geometry">
     <rect>
-     <x>210</x>
+     <x>198</x>
      <y>150</y>
-     <width>89</width>
+     <width>101</width>
      <height>25</height>
     </rect>
    </property>
@@ -75,7 +75,7 @@
   <widget class="QPushButton" name="clearButton">
    <property name="geometry">
     <rect>
-     <x>100</x>
+     <x>90</x>
      <y>150</y>
      <width>89</width>
      <height>25</height>
@@ -88,10 +88,10 @@
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>340</x>
-     <y>216</y>
-     <width>51</width>
-     <height>71</height>
+     <x>270</x>
+     <y>200</y>
+     <width>61</width>
+     <height>81</height>
     </rect>
    </property>
    <property name="text">
@@ -107,17 +107,17 @@
   <widget class="QLabel" name="label_4">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>220</y>
-     <width>171</width>
-     <height>61</height>
+     <x>60</x>
+     <y>200</y>
+     <width>201</width>
+     <height>81</height>
     </rect>
    </property>
    <property name="text">
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap resource="resources.qrc">:/iconos/iconos/psi.png</pixmap>
+    <pixmap resource="iconos.qrc">:/newPrefix/psi.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -126,7 +126,6 @@
  </widget>
  <resources>
   <include location="iconos.qrc"/>
-  <include location="resources.qrc"/>
  </resources>
  <connections/>
 </ui>
