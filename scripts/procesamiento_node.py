@@ -1,4 +1,7 @@
-from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem, QFileDialog
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+from PyQt5.QtWidgets import QWidget, QMessageBox, QListWidgetItem, QFileDialog, QGroupBox, QHBoxLayout, QVBoxLayout, QLabel, QDoubleSpinBox, QPushButton, QListWidget
 from PyQt5.QtCore import Qt
 from procesamiento_ui import Ui_Form
 import requests
@@ -10,10 +13,18 @@ import pyvista as pv
 from pyvistaqt import QtInteractor
 import io
 
+import copy
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QInputDialog
 
 from parametros_node import ParametrosWidget
+
+# Importar funciones del script SACIA_ICP.py
+from SACIA_ICP import (
+    preprocess_point_cloud,
+    execute_global_registration,
+    refine_registration
+)
 
 class ProcesamientoWidget(QWidget):
     def __init__(self, user_id, lista_nubes, actualizar_callback):
@@ -36,20 +47,35 @@ class ProcesamientoWidget(QWidget):
         # Conexiones
         self.ui.filtradoRuidoFrame.setVisible(False)
         self.ui.downsamplingFrame.setVisible(False)
-        self.ui.segmentacionFrame.setVisible(False)        
-                
+        self.ui.segmentacionFrame.setVisible(False)
+        self.ui.alineacionFrame.setVisible(False)
+
         self.ui.filtroRuidoCheckBox.stateChanged.connect(self.mostrar_filtrado_ruido)
         self.ui.downsamplingCheckBox.stateChanged.connect(self.mostrar_downsampling)
-        self.ui.segmentacionCheckBox.stateChanged.connect(self.mostrar_segmentacion)        
+        self.ui.segmentacionCheckBox.stateChanged.connect(self.mostrar_segmentacion)
+        self.ui.alineacionCheckBox.stateChanged.connect(self.mostrar_alineacion)
         self.ui.procesarNubePushButton.clicked.connect(self.aplicar_procesamiento)
         self.ui.guardarProcesadaPushButton.clicked.connect(self.guardar_nube_procesada)
         self.ui.borrarNubePushButton.clicked.connect(self.eliminar_nube)
-        self.ui.subirNubePushButton.clicked.connect(self.subir_nube_puntos)
+        self.ui.seleccionarArchivosPushButton.clicked.connect(self.seleccionar_archivos_alineacion)
+        self.ui.alinearNubesPushButton.clicked.connect(self.ejecutar_alineacion_gui)
 
-
+        
         self.param_widget = ParametrosWidget(user_id)
 
-        self.cargar_lista_nubes()
+        # Para selección múltiple de archivos para alineación
+        self.alineacion_files = []
+        self.alineacion_list_widget = None  # lista visual dentro del bloque que crearemos
+
+        self.cargar_lista_nubes()        
+
+#-----------------------------------------------------------------------------
+    def cargar_lista_nubes(self):
+        self.ui.nubesListWidget.clear()
+        for n in self.lista_nubes:
+            item = QListWidgetItem(f"{n['nubeID']} - {n['nombre']}")
+            item.setData(Qt.UserRole, n["nubeID"])
+            self.ui.nubesListWidget.addItem(item)
 
 #-----------------------------------------------------------------------------
     def actualizar_lista_externa(self, nueva_lista):
@@ -66,65 +92,29 @@ class ProcesamientoWidget(QWidget):
     def mostrar_segmentacion(self, state):
         self.ui.segmentacionFrame.setVisible(state == Qt.Checked)
 
-#-----------------------------------------------------------------------------
-
-    def cargar_lista_nubes(self):
-        self.ui.nubesListWidget.clear()
-        for n in self.lista_nubes:
-            item = QListWidgetItem(f"{n['nubeID']} - {n['nombre']}")
-            item.setData(Qt.UserRole, n["nubeID"])
-            self.ui.nubesListWidget.addItem(item)
+    def mostrar_alineacion(self, state):
+        self.ui.alineacionFrame.setVisible(state == Qt.Checked)
 
 #-----------------------------------------------------------------------------
-
-    def subir_nube_puntos(self):
-
-        archivo_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo de nube de puntos", "", "Nube de puntos (*.pcd *.ply *.xyz *.txt)")
-
-        if archivo_path:
-            try:
-                with open(archivo_path, 'rb') as f:
-                    datos = f.read()
-
-                # Asegúrate de usar el nombre con extensión real
-                nombre_archivo = os.path.basename(archivo_path)
-                extension = os.path.splitext(nombre_archivo)[-1].lstrip('.')  # 'pcd', 'ply', etc.
-
-                nombre, ok1 = QInputDialog.getText(self, "Guardar nube", "Nombre:")
-                if not ok1 or not nombre:
-                    return
-
-                descripcion, ok2 = QInputDialog.getMultiLineText(self, "Guardar nube", "Descripción:")
-                if not ok2:
-                    return
-
-                parametroID = self.param_widget.obtener_parametro_seleccionado()
-
-                payload = {
-                    "nombre": nombre,
-                    "descripcion": descripcion,
-                    "nombre_archivo": f"{nombre}.pcd",
-                    "parametroID": parametroID
-                }
-
-                files = {
-                    'archivo': (f"{nombre}.pcd", datos, 'application/octet-stream')
-                }
-
-                response = requests.post("http://127.0.0.1:5000/api/nube_puntos", files=files, data=payload)
-
-                if response.status_code == 201:
-                    QMessageBox.information(self, "Éxito", "Archivo subido correctamente.")
-                    self.actualizar_callback()
-                else:
-                    QMessageBox.warning(self, "Error", response.text)
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"No se pudo subir el archivo: {str(e)}")
+    def seleccionar_archivos_alineacion(self):
+        archivos, _ = QFileDialog.getOpenFileNames(self, "Seleccionar archivos .pcd", "", "Nube de puntos (*.pcd)")
+        if archivos:
+            archivos = [a for a in archivos if os.path.exists(a) and a.lower().endswith('.pcd')]
+            self.alineacion_files = archivos
+            self.ui.alineacionListWidget.clear()
+            for a in archivos:
+                self.ui.alineacionListWidget.addItem(a)
 
 #-----------------------------------------------------------------------------
+
     def aplicar_procesamiento(self):
         items = self.ui.nubesListWidget.selectedItems()
-        usar_alineacion = self.ui.alineacionCheckBox.isChecked()
+        usar_alineacion = False
+        # mantener compatibilidad con el checkbox antiguo si existe
+        if hasattr(self, 'alineacionCheckBox') and hasattr(self.ui.alineacionCheckBox, 'isChecked'):
+            usar_alineacion = self.ui.alineacionCheckBox.isChecked()
+        else:
+            usar_alineacion = self.ui.alineacionCheckBox.isChecked() if hasattr(self.ui, 'alineacionCheckBox') else False
 
         if not items:
             QMessageBox.warning(self, "Atención", "Selecciona al menos una nube para procesar.")
@@ -143,21 +133,62 @@ class ProcesamientoWidget(QWidget):
                 id1 = items[0].data(Qt.UserRole)
                 id2 = items[1].data(Qt.UserRole)
 
-                pcd1 = self.procesar_nube(self.descargar_nube(id1))
-                pcd2 = self.procesar_nube(self.descargar_nube(id2))
+                pcd1 = self.procesar_nube(self.descargar_nube(id1))[0]
+                pcd2 = self.procesar_nube(self.descargar_nube(id2))[0]
 
                 if pcd1 is None or pcd2 is None:
                     QMessageBox.critical(self, "Error", "Al menos una de las nubes está vacía.")
                     return
 
-                threshold = 30
-                trans_init = np.eye(4)
-                reg = o3d.pipelines.registration.registration_icp(
-                    pcd2, pcd1, threshold, trans_init,
-                    o3d.pipelines.registration.TransformationEstimationPointToPoint()
+                # Valores por defecto para cfg (la mayoría se dejan en defaults, solo voxel_size editable)
+                voxel_size = float(self.ui.voxelSizeAlineacionSpinBox.value()) if hasattr(self.ui, 'voxelSizeAlineacionSpinBox') else 0.05
+
+                preprocess_cfg = {
+                    "z_min": -10.0,
+                    "z_max": 10.0,
+                    "normal_radius": voxel_size * 2.0,
+                    "normal_max_nn": 30,
+                    "consistent_orientation_k": 5,
+                    "fpfh_radius_multiplier": 5.0,
+                    "fpfh_max_nn": 100,
+                    "voxel_size": voxel_size
+                }
+
+                ransac_cfg = {
+                    "distance_threshold_multiplier": 1.5,
+                    "estimation_method": "point_to_point",
+                    "mutual_filter": True,
+                    "ransac_n": 4,
+                    "checker_edge_length": 0.9,
+                    "criteria_max_iterations": 100000,
+                    "criteria_confidence": 0.999
+                }
+
+                icp_cfg = {
+                    "normal_radius_multiplier": 2.0,
+                    "normal_max_nn": 50,
+                    "distance_threshold_multiplier": 1.5,
+                    "estimation_method": "point_to_point"
+                }
+
+                # Preprocesar (downsample + fpfh) usando las funciones importadas
+                src_down, src_fpfh = preprocess_point_cloud(pcd2, voxel_size, preprocess_cfg)
+                tgt_down, tgt_fpfh = preprocess_point_cloud(pcd1, voxel_size, preprocess_cfg)
+
+                # Registro global (RANSAC con FPFH)
+                result_ransac = execute_global_registration(
+                    src_down, tgt_down, src_fpfh, tgt_fpfh, voxel_size, ransac_cfg
                 )
-                pcd2.transform(reg.transformation)
-                resultado = pcd2
+
+                # Refinado (ICP)
+                result_icp = refine_registration(
+                    src_down, tgt_down, result_ransac.transformation, voxel_size, icp_cfg
+                )
+
+                # Aplicar transformación final
+                src_down.transform(result_icp.transformation)
+                resultado = src_down
+
             else:
                 nube_id = items[0].data(Qt.UserRole)
                 resultado, planos_segmentados = self.procesar_nube(self.descargar_nube(nube_id))
@@ -168,10 +199,112 @@ class ProcesamientoWidget(QWidget):
 
             self.resultado_pcd = resultado
             self.ultima_nube_procesada = resultado
-            self.visualizar_pcd(resultado, planos_segmentados)
+            # si estamos en rama de alineación, planos_segmentados podría no existir
+            try:
+                self.visualizar_pcd(resultado, planos_segmentados)
+            except Exception:
+                self.visualizar_pcd(resultado, None)
 
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error durante el procesamiento: {str(e)}")
+
+#-----------------------------------------------------------------------------
+
+    def ejecutar_alineacion_gui(self):
+        """
+        Método invocado por el botón 'Alinear nubes' del bloque nuevo.
+        Ejecuta alineación de los archivos .pcd seleccionados en self.alineacion_files.
+        """
+        if not self.alineacion_files or len(self.alineacion_files) < 2:
+            QMessageBox.warning(self, "Atención", "Selecciona al menos dos archivos .pcd para alinear.")
+            return
+
+        try:
+            voxel_size = float(self.ui.voxelSizeAlineacionSpinBox.value())
+
+            preprocess_cfg = {
+                "z_min": -10.0,
+                "z_max": 10.0,
+                "normal_radius": voxel_size * 2.0,
+                "normal_max_nn": 30,
+                "consistent_orientation_k": 5,
+                "fpfh_radius_multiplier": 5.0,
+                "fpfh_max_nn": 100,
+                "voxel_size": voxel_size
+            }
+
+            ransac_cfg = {
+                "distance_threshold_multiplier": 1.5,
+                "estimation_method": "point_to_point",
+                "mutual_filter": True,
+                "ransac_n": 4,
+                "checker_edge_length": 0.9,
+                "criteria_max_iterations": 100000,
+                "criteria_confidence": 0.999
+            }
+
+            icp_cfg = {
+                "normal_radius_multiplier": 2.0,
+                "normal_max_nn": 50,
+                "distance_threshold_multiplier": 1.5,
+                "estimation_method": "point_to_point"
+            }
+
+            # Cargar todas las nubes
+            pcd_list = []
+            for f in self.alineacion_files:
+                p = o3d.io.read_point_cloud(f)
+                if p is None or len(p.points) == 0:
+                    print(f"Advertencia: {f} está vacío o no pudo cargarse.")
+                    continue
+                pcd_list.append(p)
+
+            if len(pcd_list) < 2:
+                QMessageBox.warning(self, "Atención", "No se pudieron cargar suficientes nubes válidas.")
+                return
+
+            # Registro incremental: acumulador
+            accumulated = copy.deepcopy(pcd_list[0])
+
+            for i in range(1, len(pcd_list)):
+                source = pcd_list[i]
+                target = accumulated
+
+                # Preprocesamiento (downsample y fpfh)
+                src_down, src_fpfh = preprocess_point_cloud(source, voxel_size, preprocess_cfg)
+                tgt_down, tgt_fpfh = preprocess_point_cloud(target, voxel_size, preprocess_cfg)
+
+                # RANSAC
+                result_ransac = execute_global_registration(src_down, tgt_down, src_fpfh, tgt_fpfh, voxel_size, ransac_cfg)
+                print(f"\n[ RANSAC | Nube {i+1} ] Fitness: {result_ransac.fitness:.4f}, RMSE: {result_ransac.inlier_rmse:.6f}")
+
+                # Normales para ICP (ya estimadas en preprocess pero recalculamos con parámetros de ICP)
+                src_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(
+                    radius=voxel_size * icp_cfg["normal_radius_multiplier"],
+                    max_nn=icp_cfg["normal_max_nn"]
+                ))
+                tgt_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(
+                    radius=voxel_size * icp_cfg["normal_radius_multiplier"],
+                    max_nn=icp_cfg["normal_max_nn"]
+                ))
+
+                # ICP refinado
+                result_icp = refine_registration(src_down, tgt_down, result_ransac.transformation, voxel_size, icp_cfg)
+                print(f"[ ICP | Nube {i+1} ] Fitness: {result_icp.fitness:.4f}, RMSE: {result_icp.inlier_rmse:.6f}")
+
+                # Aplicar transformación y acumular
+                src_down.transform(result_icp.transformation)
+                accumulated += src_down
+
+            # Resultado final
+            resultado = accumulated
+            self.resultado_pcd = resultado
+            self.ultima_nube_procesada = resultado
+            self.visualizar_pcd(resultado, None)
+            QMessageBox.information(self, "Éxito", "Alineación completada y visualizada.")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error durante alineación: {str(e)}")
 
 #-----------------------------------------------------------------------------
 
@@ -314,7 +447,7 @@ class ProcesamientoWidget(QWidget):
             voxel_size = float(self.ui.voxelSizeSpinBox.value())
             pcd = pcd.voxel_down_sample(voxel_size=voxel_size)
 
-        # Segmentación        
+        # Segmentación
         if self.ui.segmentacionCheckBox.isChecked():
             num_planos = int(self.ui.numPlanosSpinBox.value())
             distancia = float(self.ui.distanciaSpinBox.value())
@@ -332,17 +465,16 @@ class ProcesamientoWidget(QWidget):
                 )
                 inlier_cloud = resto.select_by_index(inliers)
                 inlier_cloud.paint_uniform_color(colors[i % len(colors)])
-                planos_segmentados.append(inlier_cloud)                
-                resto = resto.select_by_index(inliers, invert=True)                
+                planos_segmentados.append(inlier_cloud)
+                resto = resto.select_by_index(inliers, invert=True)
                 pcd_final = planos_segmentados[0]
                 for pc in planos_segmentados[1:]:
-                    pcd_final += pc                    
+                    pcd_final += pc
 
         else:
             pcd_final = pcd
 
         return pcd_final, planos_segmentados
-
 
 #-----------------------------------------------------------------------------
 

@@ -513,6 +513,119 @@
     <string>disponibes:</string>
    </property>
   </widget>
+  <widget class="QFrame" name="alineacionFrame">
+   <property name="geometry">
+    <rect>
+     <x>280</x>
+     <y>350</y>
+     <width>341</width>
+     <height>161</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <widget class="QLabel" name="label_11">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>81</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Voxel size:</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="voxelSizeAlineacionSpinBox">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>10</y>
+      <width>69</width>
+      <height>26</height>
+     </rect>
+    </property>
+    <property name="decimals">
+     <number>2</number>
+    </property>
+    <property name="minimum">
+     <double>0.010000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>0.010000000000000</double>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="seleccionarArchivosPushButton">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>60</y>
+      <width>51</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>Subir nueva nube</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="iconos.qrc">
+      <normaloff>:/newPrefix/icons8-plus-math-60.png</normaloff>:/newPrefix/icons8-plus-math-60.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>32</width>
+      <height>33</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="alineacionListWidget">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>10</y>
+      <width>151</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="selectionMode">
+     <enum>QAbstractItemView::MultiSelection</enum>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="alinearNubesPushButton">
+    <property name="geometry">
+     <rect>
+      <x>80</x>
+      <y>60</y>
+      <width>51</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>Porcesar nube seleccionada</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="iconos.qrc">
+      <normaloff>:/newPrefix/icons8-services-90.png</normaloff>:/newPrefix/icons8-services-90.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>32</width>
+      <height>32</height>
+     </size>
+    </property>
+   </widget>
+  </widget>
   <zorder>frame</zorder>
   <zorder>label_7</zorder>
   <zorder>nubesListWidget</zorder>
@@ -531,6 +644,7 @@
   <zorder>subirNubePushButton</zorder>
   <zorder>label_4</zorder>
   <zorder>label_10</zorder>
+  <zorder>alineacionFrame</zorder>
  </widget>
  <resources>
   <include location="iconos.qrc"/>
