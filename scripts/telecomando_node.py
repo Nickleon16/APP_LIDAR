@@ -1,90 +1,85 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-import subprocess
-import signal
-from datetime import datetime
-
+import sys
 import rospy
+import numpy as np
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import PointCloud2
+import sensor_msgs.point_cloud2 as pc2
 
-from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QMessageBox
+from PyQt5.QtCore import QThread
 
 import open3d as o3d
+
 from telecomando_ui import Ui_Form
+from APP_LIDAR.srv import LidarSweep
+from datetime import datetime
+from PyQt5.QtCore import pyqtSignal
+from datetime import datetime
 
 
-# ---------------------------------------------------------------------
-# Thread para ejecutar el proceso externo de captura
-# ---------------------------------------------------------------------
-class CaptureProcessThread(QThread):
-    log_signal = pyqtSignal(str)
-    finished_signal = pyqtSignal(int)  # Código de salida
 
-    def __init__(self, cmd):
+# ============================================================
+# Hilo de movimiento
+# ============================================================
+
+class MovementThread(QThread):
+    def __init__(self, pub):
         super().__init__()
-        self.cmd = cmd
-        self.process = None
+        self.pub = pub
         self.running = True
+        self.twist = Twist()
 
     def run(self):
-        try:
-            self.process = subprocess.Popen(
-                self.cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                bufsize=1,
-                universal_newlines=True,
-            )
+        rate = rospy.Rate(10)
+        while self.running and not rospy.is_shutdown():
+            self.pub.publish(self.twist)
+            rate.sleep()
 
-            # Leer la salida en tiempo real
-            for line in self.process.stdout:
-                if not self.running:
-                    break
-                self.log_signal.emit(line.strip())
-
-            self.process.wait()
-            self.finished_signal.emit(self.process.returncode)
-
-        except Exception as e:
-            self.log_signal.emit(f"❌ Error ejecutando captura: {e}")
-            self.finished_signal.emit(-1)
+    def update_twist(self, twist):
+        self.twist = twist
 
     def stop(self):
         self.running = False
-        if self.process and self.process.poll() is None:
-            self.process.send_signal(signal.SIGINT)
-            self.log_signal.emit("🛑 Captura detenida.")
-        self.quit()
-        self.wait()
 
 
-# ---------------------------------------------------------------------
-# Widget principal (telecomando + captura)
-# ---------------------------------------------------------------------
+# ============================================================
+# Widget principal
+# ============================================================
+
 class TelecomandoWidget(QWidget):
+    cloud_received = pyqtSignal(object)
     def __init__(self, user_id):
         super().__init__()
         self.user_id = user_id
+
+        # UI
         self.ui = Ui_Form()
         self.ui.setupUi(self)
 
-        # Inicializar ROS
-        self.pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
-        self.rate = rospy.Rate(10)
+        # ROS init si aún no existe
+        if not rospy.core.is_initialized():
+            rospy.init_node("telecomando_gui", anonymous=True)
 
-        # Estado inicial
-        self.capture_thread = None
-        self.ui.logCapturaLabel.setText("🟢 Sistema listo.")
+        # Publisher velocidad
+        self.pub = rospy.Publisher('/RosAria/cmd_vel', Twist, queue_size=10)
 
-        # Configuración de parámetros de velocidad
-        self.speed = 0.2
-        self.turn = 1.0
+        # Hilo de movimiento
+        self.movement_thread = MovementThread(self.pub)
+        self.movement_thread.start()
 
-        # Conexión de botones de movimiento
+        # Suscribirse a odometría
+        rospy.Subscriber('/odom', Odometry, self.odom_callback)
+
+        # Suscribirse a la nube LIDAR proveniente del robot        
+        self.pointcloud_sub = rospy.Subscriber("/lidar_cloud", PointCloud2, self.pointcloud_callback)
+
+        self.received_cloud = None  # última nube recibida
+
+        # Conectar botones
         self.ui.avanzarPushButton.pressed.connect(self.avanzar)
         self.ui.avanzarPushButton.released.connect(self.stop)
         self.ui.reversaPushButton.pressed.connect(self.retroceder)
@@ -94,125 +89,151 @@ class TelecomandoWidget(QWidget):
         self.ui.derechaPushButton.pressed.connect(self.derecha)
         self.ui.derechaPushButton.released.connect(self.stop)
 
-        # Botón de captura
-        self.ui.capturarPushButton.clicked.connect(self.iniciar_captura)
+        
+        self.cloud_received.connect(self.mostrar_y_guardar_nube)
 
-        # Subscripciones ROS
-        rospy.Subscriber('/odom', Odometry, self.odom_callback)
+        # Botón de captura LIDAR
+        self.ui.capturarPushButton.clicked.connect(self.llamar_captura)
 
-    # ------------------- Movimiento -------------------
-    def avanzar(self): self.publish_speed(self.speed)
-    def retroceder(self): self.publish_speed(-self.speed)
-    def izquierda(self): self.publish_turn(self.turn)
-    def derecha(self): self.publish_turn(-self.turn)
-    def stop(self): self.pub.publish(Twist())
+        self.ui.logCapturaLabel.setText("🟢 Sistema listo.")
 
-    def publish_speed(self, v):
-        twist = Twist()
-        twist.linear.x = v
-        self.pub.publish(twist)
+    # ============================================================
+    # Movimiento
+    # ============================================================
 
-    def publish_turn(self, w):
-        twist = Twist()
-        twist.angular.z = w
-        self.pub.publish(twist)
-    
-    # ------------------- Captura -------------------
-    def iniciar_captura(self):
-        # Si ya está corriendo, detener
-        if self.capture_thread and self.capture_thread.isRunning():
-            self.capture_thread.stop()
-            self.capture_thread = None
-            self.ui.capturarPushButton.setText("Iniciar Captura")
-            return
+    def get_linear_speed(self):
+        return float(self.ui.velLineSpinBox.value())
 
+    def get_angular_speed(self):
+        return float(self.ui.velAnguSpinBox.value())
+
+    def avanzar(self):
+        t = Twist()
+        t.linear.x = self.get_linear_speed()
+        self.movement_thread.update_twist(t)
+
+    def retroceder(self):
+        t = Twist()
+        t.linear.x = -self.get_linear_speed()
+        self.movement_thread.update_twist(t)
+
+    def izquierda(self):
+        t = Twist()
+        t.angular.z = self.get_angular_speed()
+        self.movement_thread.update_twist(t)
+
+    def derecha(self):
+        t = Twist()
+        t.angular.z = -self.get_angular_speed()
+        self.movement_thread.update_twist(t)
+
+    def stop(self):
+        self.movement_thread.update_twist(Twist())
+
+    # ============================================================
+    # Llamar servicio de captura
+    # ============================================================
+
+    def llamar_captura(self):
         try:
-            # === Leer parámetros desde la GUI ===
-            steps = int(self.ui.stepsSpinBox.value())   # Nuevo control en GUI
+            steps = int(self.ui.stepsSpinBox.value())
             min_range = float(self.ui.rangoMinSpinBox.value())
             max_range = float(self.ui.rangoMaxSpinBox.value())
             fov = float(self.ui.fovSpinBox.value())
             prefix = self.ui.prefijoLineEdit.text().strip() or "barrido"
-
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Parámetros inválidos: {e}")
             return
 
-        # === Llamar script con --steps ===
-        cmd = [
-            "python3", "captura_lidar.py",
-            "--min_range", str(min_range),
-            "--max_range", str(max_range),
-            "--steps", str(steps),
-            "--fov", str(fov),
-            "--prefix", prefix
-        ]
+        self.ui.logCapturaLabel.setText("📡 Llamando servicio /lidar_sweep...")        
 
-        self.ui.logCapturaLabel.setText("📸 Iniciando captura...")
-        self.ui.capturarPushButton.setText("Detener Captura")
-
-        # Lanzar hilo
-        self.capture_thread = CaptureProcessThread(cmd)
-        self.capture_thread.log_signal.connect(self.log_message)
-        self.capture_thread.finished_signal.connect(self.captura_finalizada)
-        self.capture_thread.start()
-
-
-    def log_message(self, msg):
-        self.ui.logCapturaLabel.setText(msg)
-
-    def captura_finalizada(self, code):
-        self.ui.capturarPushButton.setText("Iniciar Captura")
-        self.capture_thread = None
-
-        if code != 0:
-            self.ui.logCapturaLabel.setText(f"⚠️ Captura terminada con código {code}.")
-            return
-
-        self.ui.logCapturaLabel.setText("✅ Captura finalizada correctamente.")
-
-        temp_file = "temp_cloud.pcd"
-        if not os.path.exists(temp_file):
-            QMessageBox.warning(self, "Error", "No se encontró la nube temporal generada.")
-            return
-
-        # Mostrar nube en visualizador Open3D
         try:
-            cloud = o3d.io.read_point_cloud(temp_file)
-            if len(cloud.points) == 0:
-                QMessageBox.warning(self, "Nube vacía", "La nube generada está vacía.")
+            rospy.wait_for_service('/lidar_sweep')
+            proxy = rospy.ServiceProxy('/lidar_sweep', LidarSweep)
+            resp = proxy(steps, min_range, max_range, fov, prefix)
+
+            if not resp.success:
+                self.ui.logCapturaLabel.setText(f"❌ Error: {resp.message}")
                 return
 
-            self.ui.logCapturaLabel.setText("👁️ Mostrando nube capturada...")
-            o3d.visualization.draw_geometries([cloud], window_name="Vista de Nube LIDAR")
+            self.ui.logCapturaLabel.setText("📨 Esperando nube publicada por el robot...")
 
         except Exception as e:
-            QMessageBox.warning(self, "Error visualizando nube", str(e))
+            self.ui.logCapturaLabel.setText(f"❌ Error al llamar servicio: {e}")
+
+    # ============================================================
+    # Recibir nube LIDAR publicada /lidar_points
+    # ============================================================
+    def pointcloud_callback(self, msg):
+        try:
+            pts = []
+            for p in pc2.read_points(msg, skip_nans=True):
+                pts.append([p[0], p[1], p[2]])
+
+            if not pts:
+                # emitir nube vacía igual
+                self.cloud_received.emit(None)
+                return
+
+            cloud_np = np.array(pts)
+
+            # Emitir la nube al hilo principal
+            self.cloud_received.emit(cloud_np)
+
+        except Exception as e:
+            # Emitir error como None
+            self.cloud_received.emit(None)
+
+    def mostrar_y_guardar_nube(self, cloud_np):
+        if cloud_np is None or len(cloud_np) == 0:
+            self.ui.logCapturaLabel.setText("⚠️ Nube vacía o error al procesarla.")
             return
 
-        # Preguntar si se desea guardar
-        respuesta = QMessageBox.question(
-            self,
-            "Guardar nube",
-            "¿Deseas guardar la nube capturada?",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.Yes
-        )
+        try:
+            # mostrar estado
+            self.ui.logCapturaLabel.setText(f"✅ Nube recibida ({cloud_np.shape[0]} puntos). Abriendo visor...")
 
-        if respuesta == QMessageBox.Yes:
-            prefix = self.ui.prefijoLineEdit.text().strip() or "barrido"
-            now = datetime.now().strftime("%Y%m%d_%H%M%S")
-            final_path = f"{prefix}_{now}.pcd"
-            os.rename(temp_file, final_path)
-            QMessageBox.information(self, "Guardado", f"Nube guardada como {final_path}")
-        else:
-            os.remove(temp_file)
-            QMessageBox.information(self, "Descartado", "La nube fue eliminada.")
+            # Convertir a Open3D
+            cloud_o3d = o3d.geometry.PointCloud()
+            cloud_o3d.points = o3d.utility.Vector3dVector(cloud_np)
 
-    # ------------------- Callbacks ROS -------------------
+            # Visualizar
+            o3d.visualization.draw_geometries([cloud_o3d], window_name="Nube LIDAR")
+
+            # Preguntar si guardar
+            respuesta = QMessageBox.question(
+                self,
+                "Guardar nube",
+                "¿Deseas guardar la nube capturada?",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.Yes,
+            )
+
+            if respuesta == QMessageBox.Yes:
+                prefix = self.ui.prefijoLineEdit.text().strip() or "nube"
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                filename = f"{prefix}_{timestamp}.pcd"
+
+                o3d.io.write_point_cloud(filename, cloud_o3d)
+
+                self.ui.logCapturaLabel.setText(f"💾 Nube guardada como: {filename}")
+                QMessageBox.information(self, "Guardado", f"Nube guardada como\n{filename}")
+            else:
+                self.ui.logCapturaLabel.setText("🗑️ Nube descartada.")
+
+        except Exception as e:
+            self.ui.logCapturaLabel.setText(f"❌ Error mostrando/guardando nube: {e}")
+
+
+    # ============================================================
+    # Odometría
+    # ============================================================
+
     def odom_callback(self, msg):
         pos = msg.pose.pose.position
         vel = msg.twist.twist
-        texto = f"Pos: ({pos.x:.2f}, {pos.y:.2f}, {pos.z:.2f})\n"
-        texto += f"Vel: L={vel.linear.x:.2f} m/s | A={vel.angular.z:.2f} rad/s"
-        self.ui.posicionLabel.setText(texto)
+
+        txt = f"Pos: ({pos.x:.2f}, {pos.y:.2f}, {pos.z:.2f})\n"
+        txt += f"Vel: L={vel.linear.x:.2f} m/s | A={vel.angular.z:.2f} rad/s"
+        self.ui.posicionLabel.setText(txt)
+    # ============================================================

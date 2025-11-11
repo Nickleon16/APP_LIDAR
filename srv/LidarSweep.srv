@@ -1,0 +1,10 @@
+int32 steps
+float32 min_range
+float32 max_range
+float32 fov
+string prefix
+---
+string cloud_path
+bool success
+string message
+

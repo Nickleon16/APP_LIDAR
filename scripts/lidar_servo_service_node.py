@@ -3,14 +3,16 @@
 
 import os
 import math
-import json
 import rospy
 import numpy as np
-from sensor_msgs.msg import LaserScan
-from dynamixel_sdk import *
+from sensor_msgs.msg import LaserScan, PointCloud2
+import sensor_msgs.point_cloud2 as pc2
 from std_msgs.msg import Header
+from dynamixel_sdk import *
+from APP_LIDAR.srv import LidarSweep, LidarSweepResponse
+from sensor_msgs.msg import PointCloud2, PointField
 
-# ==== Configuración servo ====
+# ==== CONFIGURACIÓN SERVO ====
 DEVICENAME = '/dev/ttyUSB1'
 BAUDRATE = 57600
 PROTOCOL_VERSION = 1.0
@@ -21,52 +23,55 @@ ADDR_PRESENT_POSITION  = 36
 TORQUE_ENABLE          = 1
 TORQUE_DISABLE         = 0
 
-# ==== Calibración ====
-DXL_POS_NEG90 = 2570   # -90°
-DXL_POS_POS90 = 570    # +90°
+# ==== CALIBRACIÓN ====
+DXL_POS_NEG90 = 2500
+DXL_POS_POS90 = 500
 DXL_POS_CENTER = (DXL_POS_NEG90 + DXL_POS_POS90) // 2
 DEG_PER_TICK = 180.0 / (DXL_POS_NEG90 - DXL_POS_POS90)
 
-# ==== Publisher ROS de nube de puntos ====
-from sensor_msgs.msg import PointCloud2, PointField
-import sensor_msgs.point_cloud2 as pc2
 
 def numpy_to_pointcloud2(points, frame_id="lidar_link"):
-    """Convierte un array Nx3 de numpy a un PointCloud2"""
     fields = [
         PointField('x', 0, PointField.FLOAT32, 1),
         PointField('y', 4, PointField.FLOAT32, 1),
         PointField('z', 8, PointField.FLOAT32, 1)
     ]
-    header = rospy.Header()
+    header = Header()
     header.stamp = rospy.Time.now()
     header.frame_id = frame_id
-    return pc2.create_cloud(header, fields, points)
+    ### FIX: Convertir a lista
+    return pc2.create_cloud(header, fields, points.tolist())
+
 
 class LidarServoScanner:
-    def __init__(self, steps=40, fov=30.0, min_range=0.05, max_range=5.0, use_ros_init=True):
+    def __init__(self, steps=10, min_range=0.05, max_range=5.0, fov=30.0, prefix="barrido"):
         self.steps = steps
-        self.fov = fov
         self.min_range = min_range
         self.max_range = max_range
+        self.fov = fov
+        self.prefix = prefix
 
-        if use_ros_init:
-            rospy.init_node("lidar_servo_barrido", anonymous=True)
-
-        self.pc_pub = rospy.Publisher("/lidar_points", PointCloud2, queue_size=1)
-        rospy.Subscriber("/scan", LaserScan, self.scan_callback)
         self.latest_scan = None
-        while self.latest_scan is None and not rospy.is_shutdown():            
+        self.points_all = []
+
+        # No volver a inicializar ROS aquí
+        ### FIX: Quitar init_node
+        rospy.Subscriber("/scan", LaserScan, self.scan_callback)
+        self.slice_pub = rospy.Publisher("/lidar_slice", PointCloud2, queue_size=1)
+        self.cloud_pub = rospy.Publisher("/lidar_cloud", PointCloud2, queue_size=1)
+
+
+        while self.latest_scan is None and not rospy.is_shutdown():
             rospy.sleep(0.05)
 
         # Inicializar servo
         self.portHandler = PortHandler(DEVICENAME)
         self.packetHandler = PacketHandler(PROTOCOL_VERSION)
         if not self.portHandler.openPort():
-            raise RuntimeError("❌ No se pudo abrir el puerto del servo.")
+            raise RuntimeError(f"No se pudo abrir {DEVICENAME}")
         self.portHandler.setBaudRate(BAUDRATE)
         self.packetHandler.write1ByteTxRx(self.portHandler, DXL_ID, ADDR_TORQUE_ENABLE, TORQUE_ENABLE)
-        print("✅ Servo conectado y torque habilitado.")
+        rospy.loginfo("✅ Servo conectado y torque habilitado.")
 
     def scan_callback(self, msg):
         self.latest_scan = msg
@@ -92,12 +97,13 @@ class LidarServoScanner:
             pts.append([x, y, z])
         if not pts:
             return np.empty((0, 3))
-        # Rotación eje X
-        c, s = math.cos(tilt_angle_rad), math.sin(tilt_angle_rad)
-        R_x = np.array([[1,0,0],[0,c,-s],[0,s,c]])
-        pts = np.array(pts) @ R_x.T
-        return pts
-    
+        R_x = np.array([
+            [1, 0, 0],
+            [0, math.cos(tilt_angle_rad), -math.sin(tilt_angle_rad)],
+            [0, math.sin(tilt_angle_rad), math.cos(tilt_angle_rad)]
+        ])
+        return np.array(pts) @ R_x.T
+
     def run_sweep(self):
         min_pos = DXL_POS_NEG90
         max_pos = DXL_POS_POS90
@@ -107,13 +113,10 @@ class LidarServoScanner:
         out_dir = rospy.get_param("~out_dir", "/tmp")
         os.makedirs(out_dir, exist_ok=True)
 
-        # -------------------------------
-        # Ir a -90° y esperar estabilización
-        # -------------------------------
         rospy.loginfo("Moviendo servo a -90° para iniciar barrido...")
-        self.move_servo(min_pos)         # ya hace sleep(0.1)
-        rospy.sleep(3.0)                 # tiempo real para que llegue
-        rospy.loginfo("Servo listo en -90°. Iniciando barrido...")
+        self.move_servo(min_pos)
+        rospy.sleep(0.8)  ### FIX: delay más razonable
+        rospy.loginfo("Servo listo. Iniciando barrido...")
 
         for i in range(self.steps):
             pos = int(min_pos + i * delta)
@@ -123,43 +126,57 @@ class LidarServoScanner:
             ang_rad = math.radians(ang_deg)
 
             pts = self.get_scan_points(ang_rad)
-            if pts.size > 0:
-                points_all.append(pts)
-                pc2_msg = numpy_to_pointcloud2(pts)
-                self.pc_pub.publish(pc2_msg)
 
+            if pts.size > 0:
+                points_all.append(pts)                
+                self.slice_pub.publish(numpy_to_pointcloud2(pts))
             rospy.loginfo(f"Barrido {i+1}/{self.steps} publicado ({pts.shape[0] if pts.size>0 else 0} puntos)")
 
         if points_all:
             cloud_np = np.vstack(points_all)
             cloud_path = os.path.join(out_dir, f"{self.steps}_points.npy")
             np.save(cloud_path, cloud_np)
-            rospy.loginfo(f"Nube guardada en: {cloud_path}")
+            rospy.loginfo(f"✅ Nube guardada en: {cloud_path}")
 
-            # Publicar nube completa
             header = Header()
             header.stamp = rospy.Time.now()
             header.frame_id = "lidar_link"
-            cloud_msg = pc2.create_cloud_xyz32(header, cloud_np.tolist())
-            self.cloud_pub.publish(cloud_msg)
+            self.cloud_pub.publish(pc2.create_cloud_xyz32(header, cloud_np.tolist()))
 
             return cloud_path
 
         return ""
 
-        
     def cleanup(self):
         self.packetHandler.write1ByteTxRx(self.portHandler, DXL_ID, ADDR_TORQUE_ENABLE, TORQUE_DISABLE)
         self.portHandler.closePort()
-        print("✅ Servo deshabilitado y puerto cerrado.")
+        rospy.loginfo("✅ Servo deshabilitado y puerto cerrado.")
 
-    def run(self):
-        try:
-            self.run_sweep()
-        finally:
-            self.cleanup()
+
+def handle_lidar_sweep(req):
+    try:
+        scanner = LidarServoScanner(steps=req.steps,
+                                    min_range=req.min_range,
+                                    max_range=req.max_range,
+                                    fov=req.fov,
+                                    prefix=req.prefix)
+        cloud_path = scanner.run_sweep()
+        scanner.cleanup()
+        if cloud_path:
+            return LidarSweepResponse(cloud_path=cloud_path, success=True, message="Barrido completado")
+        else:
+            return LidarSweepResponse(cloud_path="", success=False, message="Ningún punto capturado")
+    except Exception as e:
+        rospy.logerr(f"Error barrido: {e}")
+        return LidarSweepResponse(cloud_path="", success=False, message=str(e))
+
+
+def lidar_service_node():
+    rospy.init_node("lidar_servo_service_node")
+    rospy.Service('/lidar_sweep', LidarSweep, handle_lidar_sweep)
+    rospy.loginfo("🚀 Servicio /lidar_sweep listo")
+    rospy.spin()
 
 
 if __name__ == "__main__":
-    scanner = LidarServoScanner()
-    scanner.run()
+    lidar_service_node()
