@@ -202,22 +202,31 @@ def obtener_parametros_por_id(parametro_id):
                 "parametroID": parametro.parametroID,
                 "nombre_preset": parametro.nombre_preset,
                 "descripcion": parametro.descripcion,
-                "fecha": parametro.fecha.isoformat() if parametro.fecha else None,
-                "velocidad_maxima": parametro.velocidad_maxima,
+                "fecha": parametro.fecha.isoformat() if parametro.fecha else None,                
                 "velocidad_lineal": parametro.velocidad_lineal,
-                "velocidad_angular": parametro.velocidad_angular,
-                "tasa_muestreo": parametro.tasa_muestreo,
-                "campo_vision": parametro.campo_vision,
-                "resolucion": parametro.resolucion
-                # TODO: Agregar los campos restantes
-                #"filtro_ruido": parametro.filtro_ruido,
-                #"metodo_filtrado": parametro.metodo_filtrado,
-                #"reduccion_ruido": parametro.reduccion_ruido,
-                #"compensacion_movimiento": parametro.compensacion_movimiento,
-                #"metodo_procesamiento": parametro.metodo_procesamiento,
-                #"tolerancia": parametro.tolerancia,
-                #"iteraciones": parametro.iteraciones,
-                #"correspondencia": parametro.correspondencia
+                "velocidad_angular": parametro.velocidad_angular,                
+                # Captura de nubes                
+                "num_steps": parametro.num_steps,
+                "max_range": parametro.max_range,
+                "min_range": parametro.min_range,
+                "fov_angel": parametro.fov_angel,
+                "prefijo": parametro.prefijo,
+                # preprocesamiento
+                "vecinos": parametro.vecinos,
+                "dev_std": parametro.dev_std,
+                "z_max": parametro.z_max,
+                "z_min": parametro.z_min,
+                "voxel_size": parametro.voxel_size,
+                # procesamiento
+                "num_planos": parametro.num_planos,
+                "distancia": parametro.distancia,
+                "iteraciones": parametro.iteraciones,
+                # alineacion
+                "voxel_size_ali": parametro.voxel_size_ali,
+                "normal_rad": parametro.normal_rad,
+                "normal_max_nn": parametro.normal_max_nn,
+                "fpfh_rad": parametro.fpfh_rad,
+                "fpfh_max_nn": parametro.fpfh_max_nn 
             }
             return jsonify({"parametros": resultado}), 200
         return jsonify({"error": "No se encontró el preset"}), 404
@@ -242,21 +251,31 @@ def obtener_parametros_default():
                 "parametroID": parametro.parametroID,
                 "nombre_preset": parametro.nombre_preset,
                 "descripcion": parametro.descripcion,
-                "fecha": parametro.fecha.isoformat() if parametro.fecha else None,
-                "velocidad_maxima": parametro.velocidad_maxima,
+                "fecha": parametro.fecha.isoformat() if parametro.fecha else None,                
                 "velocidad_lineal": parametro.velocidad_lineal,
                 "velocidad_angular": parametro.velocidad_angular,
-                "tasa_muestreo": parametro.tasa_muestreo,
-                "campo_vision": parametro.campo_vision,
-                "resolucion": parametro.resolucion,
-                "filtro_ruido": parametro.filtro_ruido,
-                "metodo_filtrado": parametro.metodo_filtrado,
-                "reduccion_ruido": parametro.reduccion_ruido,
-                "compensacion_movimiento": parametro.compensacion_movimiento,
-                "metodo_procesamiento": parametro.metodo_procesamiento,
-                "tolerancia": parametro.tolerancia,
+                # Captura de nubes                
+                "num_steps": parametro.num_steps,
+                "max_range": parametro.max_range,
+                "min_range": parametro.min_range,
+                "fov_angel": parametro.fov_angel,
+                "prefijo": parametro.prefijo,
+                # preprocesamiento
+                "vecinos": parametro.vecinos,
+                "dev_std": parametro.dev_std,
+                "z_max": parametro.z_max,
+                "z_min": parametro.z_min,
+                "voxel_size": parametro.voxel_size,
+                # procesamiento
+                "num_planos": parametro.num_planos,
+                "distancia": parametro.distancia,
                 "iteraciones": parametro.iteraciones,
-                "correspondencia": parametro.correspondencia
+                # alineacion
+                "voxel_size_ali": parametro.voxel_size_ali,
+                "normal_rad": parametro.normal_rad,
+                "normal_max_nn": parametro.normal_max_nn,
+                "fpfh_rad": parametro.fpfh_rad,
+                "fpfh_max_nn": parametro.fpfh_max_nn 
             }
             return jsonify({"parametros": resultado}), 200
 

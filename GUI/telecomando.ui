@@ -16,10 +16,10 @@
   <widget class="QPushButton" name="avanzarPushButton">
    <property name="geometry">
     <rect>
-     <x>130</x>
-     <y>40</y>
+     <x>160</x>
+     <y>120</y>
      <width>81</width>
-     <height>25</height>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -29,10 +29,10 @@
   <widget class="QPushButton" name="reversaPushButton">
    <property name="geometry">
     <rect>
-     <x>130</x>
-     <y>120</y>
+     <x>160</x>
+     <y>200</y>
      <width>81</width>
-     <height>25</height>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -42,10 +42,10 @@
   <widget class="QPushButton" name="izquierdaPushButton">
    <property name="geometry">
     <rect>
-     <x>28</x>
-     <y>80</y>
+     <x>58</x>
+     <y>160</y>
      <width>91</width>
-     <height>25</height>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -55,10 +55,10 @@
   <widget class="QPushButton" name="derechaPushButton">
    <property name="geometry">
     <rect>
-     <x>210</x>
-     <y>80</y>
+     <x>250</x>
+     <y>160</y>
      <width>91</width>
-     <height>25</height>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -68,10 +68,10 @@
   <widget class="QPushButton" name="stopPushButton">
    <property name="geometry">
     <rect>
-     <x>130</x>
-     <y>80</y>
-     <width>71</width>
-     <height>25</height>
+     <x>160</x>
+     <y>160</y>
+     <width>81</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -81,10 +81,10 @@
   <widget class="QLabel" name="posicionLabel">
    <property name="geometry">
     <rect>
-     <x>490</x>
+     <x>140</x>
      <y>20</y>
-     <width>311</width>
-     <height>17</height>
+     <width>221</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
@@ -94,10 +94,10 @@
   <widget class="QLabel" name="velocidadLabel">
    <property name="geometry">
     <rect>
-     <x>490</x>
+     <x>140</x>
      <y>60</y>
-     <width>311</width>
-     <height>17</height>
+     <width>221</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
@@ -107,8 +107,8 @@
   <widget class="QGroupBox" name="groupBox">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>180</y>
+     <x>420</x>
+     <y>120</y>
      <width>341</width>
      <height>241</height>
     </rect>
@@ -183,7 +183,7 @@
       <x>180</x>
       <y>200</y>
       <width>113</width>
-      <height>25</height>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -338,10 +338,10 @@
   <widget class="QLabel" name="logCapturaLabel">
    <property name="geometry">
     <rect>
-     <x>450</x>
+     <x>460</x>
      <y>100</y>
-     <width>501</width>
-     <height>20</height>
+     <width>491</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
@@ -351,10 +351,10 @@
   <widget class="QLabel" name="posicionLabel_3">
    <property name="geometry">
     <rect>
-     <x>370</x>
-     <y>100</y>
+     <x>420</x>
+     <y>30</y>
      <width>71</width>
-     <height>17</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
@@ -364,10 +364,10 @@
   <widget class="QLabel" name="posicionLabel_4">
    <property name="geometry">
     <rect>
-     <x>370</x>
+     <x>50</x>
      <y>20</y>
-     <width>111</width>
-     <height>17</height>
+     <width>81</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
@@ -377,10 +377,10 @@
   <widget class="QLabel" name="velocidadLabel_2">
    <property name="geometry">
     <rect>
-     <x>370</x>
+     <x>50</x>
      <y>60</y>
-     <width>91</width>
-     <height>17</height>
+     <width>81</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
@@ -390,8 +390,8 @@
   <widget class="QGroupBox" name="groupBox_2">
    <property name="geometry">
     <rect>
-     <x>420</x>
-     <y>170</y>
+     <x>60</x>
+     <y>260</y>
      <width>281</width>
      <height>111</height>
     </rect>
@@ -489,6 +489,32 @@
      <number>1</number>
     </property>
    </widget>
+  </widget>
+  <widget class="QPushButton" name="iniciarOdomPushButton">
+   <property name="geometry">
+    <rect>
+     <x>780</x>
+     <y>150</y>
+     <width>191</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Iniciar Odometria</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="finalizarOdomPushButton">
+   <property name="geometry">
+    <rect>
+     <x>780</x>
+     <y>200</y>
+     <width>191</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Finalizar Odometria</string>
+   </property>
   </widget>
  </widget>
  <resources/>

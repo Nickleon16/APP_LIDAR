@@ -171,7 +171,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Descripcion:</string>
+    <string>Descripción:</string>
    </property>
   </widget>
   <widget class="QGroupBox" name="groupBox">
@@ -341,7 +341,7 @@
      <number>5</number>
     </property>
    </widget>
-   <widget class="QLineEdit" name="prefijoLineEdit_2">
+   <widget class="QLineEdit" name="prefijoLineEdit">
     <property name="geometry">
      <rect>
       <x>140</x>
@@ -653,7 +653,7 @@
      <string>z_max</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="rangoMaxSpinBox_4">
+   <widget class="QSpinBox" name="zMinSpinBox">
     <property name="geometry">
      <rect>
       <x>230</x>
@@ -675,7 +675,7 @@
      <number>5</number>
     </property>
    </widget>
-   <widget class="QSpinBox" name="rangoMaxSpinBox_3">
+   <widget class="QSpinBox" name="zMaxSpinBox">
     <property name="geometry">
      <rect>
       <x>230</x>
@@ -865,7 +865,7 @@
      <string>Normal Rad:</string>
     </property>
    </widget>
-   <widget class="QDoubleSpinBox" name="voxelSizeAlineacionSpinBox">
+   <widget class="QDoubleSpinBox" name="normalRadSpinBox">
     <property name="geometry">
      <rect>
       <x>130</x>
@@ -881,10 +881,10 @@
      <double>0.100000000000000</double>
     </property>
     <property name="singleStep">
-     <double>0.010000000000000</double>
+     <double>0.100000000000000</double>
     </property>
    </widget>
-   <widget class="QDoubleSpinBox" name="voxelSizeAlineacionSpinBox_2">
+   <widget class="QDoubleSpinBox" name="voxelSizeAlineacionSpinBox">
     <property name="geometry">
      <rect>
       <x>130</x>
@@ -929,7 +929,7 @@
      <string>Normal max nn:</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="iteracionesSpinBox_2">
+   <widget class="QSpinBox" name="normalMaxNnSpinBox">
     <property name="geometry">
      <rect>
       <x>130</x>
@@ -964,7 +964,7 @@
      <string>fpfh rad:</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="iteracionesSpinBox_3">
+   <widget class="QSpinBox" name="fpfhMaxNnSpinBox">
     <property name="geometry">
      <rect>
       <x>130</x>
@@ -999,7 +999,7 @@
      <string>fpfh max nn:</string>
     </property>
    </widget>
-   <widget class="QSpinBox" name="iteracionesSpinBox_4">
+   <widget class="QSpinBox" name="fpfhRadSpinBox">
     <property name="geometry">
      <rect>
       <x>130</x>

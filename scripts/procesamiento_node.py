@@ -12,10 +12,11 @@ import numpy as np
 import pyvista as pv
 from pyvistaqt import QtInteractor
 import io
-
+import math, os, glob
 import copy
 from PyQt5.QtWidgets import QVBoxLayout
 from PyQt5.QtWidgets import QInputDialog
+import csv
 
 from parametros_node import ParametrosWidget
 
@@ -58,16 +59,18 @@ class ProcesamientoWidget(QWidget):
         self.ui.guardarProcesadaPushButton.clicked.connect(self.guardar_nube_procesada)
         self.ui.borrarNubePushButton.clicked.connect(self.eliminar_nube)
         self.ui.seleccionarArchivosPushButton.clicked.connect(self.seleccionar_archivos_alineacion)
+        self.ui.seleccionarOdomPushButton.clicked.connect(self.seleccionar_archivos_odom)
         self.ui.alinearNubesPushButton.clicked.connect(self.ejecutar_alineacion_gui)
-
         
+        self.ui.subirNubePushButton.clicked.connect(self.subir_nube)
         self.param_widget = ParametrosWidget(user_id)
 
         # Para selección múltiple de archivos para alineación
         self.alineacion_files = []
+        self.odom_file = None 
         self.alineacion_list_widget = None  # lista visual dentro del bloque que crearemos
 
-        self.cargar_lista_nubes()        
+        self.cargar_lista_nubes()     
 
 #-----------------------------------------------------------------------------
     def cargar_lista_nubes(self):
@@ -76,6 +79,45 @@ class ProcesamientoWidget(QWidget):
             item = QListWidgetItem(f"{n['nubeID']} - {n['nombre']}")
             item.setData(Qt.UserRole, n["nubeID"])
             self.ui.nubesListWidget.addItem(item)
+
+#-----------------------------------------------------------------------------
+
+    def subir_nube(self):
+        archivo_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivo de nube de puntos", "", "Nube de puntos (*.pcd *.ply *.xyz *.txt)")
+        if archivo_path:
+            try:
+                with open(archivo_path, 'rb') as f:
+                    datos = f.read()
+
+                # Asegúrate de usar el nombre con extensión real
+                nombre_archivo = os.path.basename(archivo_path)
+                extension = os.path.splitext(nombre_archivo)[-1].lstrip('.')  # 'pcd', 'ply', etc.
+
+                nombre, ok1 = QInputDialog.getText(self, "Guardar nube", "Nombre:")
+                if not ok1 or not nombre:
+                    return
+                descripcion, ok2 = QInputDialog.getMultiLineText(self, "Guardar nube", "Descripción:")
+                if not ok2:
+                    return
+                parametroID = self.param_widget.obtener_parametro_seleccionado()
+                payload = {
+                    "nombre": nombre,
+                    "descripcion": descripcion,
+                    "nombre_archivo": f"{nombre}.pcd",
+                    "parametroID": parametroID
+                }
+                files = {'archivo': (f"{nombre}.pcd", datos, 'application/octet-stream')}
+
+                response = requests.post("http://127.0.0.1:5000/api/nube_puntos", files=files, data=payload)
+
+                if response.status_code == 201:
+                    QMessageBox.information(self, "Éxito", "Archivo subido correctamente.")
+                    self.cargar_lista_nubes()
+                    self.actualizar_callback()                    
+                else:
+                    QMessageBox.warning(self, "Error", response.text)
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"No se pudo subir el archivo: {str(e)}")
 
 #-----------------------------------------------------------------------------
     def actualizar_lista_externa(self, nueva_lista):
@@ -104,6 +146,42 @@ class ProcesamientoWidget(QWidget):
             self.ui.alineacionListWidget.clear()
             for a in archivos:
                 self.ui.alineacionListWidget.addItem(a)
+
+
+
+    def seleccionar_archivos_odom(self):
+        archivo, _ = QFileDialog.getOpenFileName(self, "Seleccionar archivos .csv", "", "Odom (*.csv)")
+        if archivo and os.path.exists(archivo):
+            self.odom_file = archivo
+            self.ui.odomListWidget.clear()
+            self.ui.odomListWidget.addItem(archivo)
+
+
+
+    def cargar_odom_desde_csv(self, archivo_csv):
+        odom_list = []
+
+        with open(archivo_csv, newline='') as f:
+            reader = csv.reader(f)
+
+            for i, row in enumerate(reader):
+                if len(row) != 6:
+                    raise ValueError(f"Fila {i+1} no tiene 6 columnas")
+
+                odom_list.append((
+                    float(row[0]),  # dx
+                    float(row[1]),  # dy
+                    float(row[2]),  # dz
+                    float(row[3]),  # roll
+                    float(row[4]),  # pitch
+                    float(row[5])   # yaw
+                ))
+
+        if not odom_list:
+            raise ValueError("El archivo de odometría está vacío")
+
+        return odom_list
+
 
 #-----------------------------------------------------------------------------
 
@@ -211,100 +289,114 @@ class ProcesamientoWidget(QWidget):
 #-----------------------------------------------------------------------------
 
     def ejecutar_alineacion_gui(self):
-        """
-        Método invocado por el botón 'Alinear nubes' del bloque nuevo.
-        Ejecuta alineación de los archivos .pcd seleccionados en self.alineacion_files.
-        """
+
+        VOXEL = float(self.ui.voxelSizeAlineacionSpinBox.value())
+        ICP_DIST = 0.1
+
+        def deg2rad(x): 
+            return x * np.pi / 180.0
+
+        def make_transform(dx, dy, dz, roll, pitch, yaw):
+            r = deg2rad(roll)
+            p = deg2rad(pitch)
+            y = deg2rad(yaw)
+
+            Rx = np.array([
+                [1, 0, 0],
+                [0, math.cos(r), -math.sin(r)],
+                [0, math.sin(r),  math.cos(r)]
+            ])
+
+            Ry = np.array([
+                [ math.cos(p), 0, math.sin(p)],
+                [0, 1, 0],
+                [-math.sin(p), 0, math.cos(p)]
+            ])
+
+            Rz = np.array([
+                [math.cos(y), -math.sin(y), 0],
+                [math.sin(y),  math.cos(y), 0],
+                [0, 0, 1]
+            ])
+
+            R = Rz @ Ry @ Rx
+
+            T = np.eye(4)
+            T[:3, :3] = R
+            T[:3, 3] = [dx, dy, dz]
+
+            return T
+
+        def preprocess(pcd):
+            pcd = pcd.voxel_down_sample(VOXEL)
+            pcd.estimate_normals()
+            return pcd
+
+        # ---------------- VALIDACIONES ---------------- #
+
         if not self.alineacion_files or len(self.alineacion_files) < 2:
-            QMessageBox.warning(self, "Atención", "Selecciona al menos dos archivos .pcd para alinear.")
+            QMessageBox.warning(self, "Atención", "Selecciona al menos dos archivos .pcd.")
+            return
+
+        if not hasattr(self, "odom_file"):
+            QMessageBox.warning(self, "Atención", "Selecciona un archivo de odometría (.csv).")
             return
 
         try:
-            voxel_size = float(self.ui.voxelSizeAlineacionSpinBox.value())
+            # ---------------- CARGA ---------------- #
 
-            preprocess_cfg = {
-                "z_min": -10.0,
-                "z_max": 10.0,
-                "normal_radius": voxel_size * 2.0,
-                "normal_max_nn": 30,
-                "consistent_orientation_k": 5,
-                "fpfh_radius_multiplier": 5.0,
-                "fpfh_max_nn": 100,
-                "voxel_size": voxel_size
-            }
+            clouds = [
+                preprocess(o3d.io.read_point_cloud(f))
+                for f in self.alineacion_files
+            ]
 
-            ransac_cfg = {
-                "distance_threshold_multiplier": 1.5,
-                "estimation_method": "point_to_point",
-                "mutual_filter": True,
-                "ransac_n": 4,
-                "checker_edge_length": 0.9,
-                "criteria_max_iterations": 100000,
-                "criteria_confidence": 0.999
-            }
+            odom_list = self.cargar_odom_desde_csv(self.odom_file)
 
-            icp_cfg = {
-                "normal_radius_multiplier": 2.0,
-                "normal_max_nn": 50,
-                "distance_threshold_multiplier": 1.5,
-                "estimation_method": "point_to_point"
-            }
-
-            # Cargar todas las nubes
-            pcd_list = []
-            for f in self.alineacion_files:
-                p = o3d.io.read_point_cloud(f)
-                if p is None or len(p.points) == 0:
-                    print(f"Advertencia: {f} está vacío o no pudo cargarse.")
-                    continue
-                pcd_list.append(p)
-
-            if len(pcd_list) < 2:
-                QMessageBox.warning(self, "Atención", "No se pudieron cargar suficientes nubes válidas.")
+            if len(odom_list) < len(clouds) - 1:
+                QMessageBox.warning(
+                    self,
+                    "Atención",
+                    "El CSV de odometría tiene menos filas que pares de nubes."
+                )
                 return
 
-            # Registro incremental: acumulador
-            accumulated = copy.deepcopy(pcd_list[0])
+            # ---------------- ALINEACIÓN ---------------- #
 
-            for i in range(1, len(pcd_list)):
-                source = pcd_list[i]
-                target = accumulated
+            T_global = np.eye(4)
+            poses = [T_global.copy()]
+            global_map = clouds[0]
 
-                # Preprocesamiento (downsample y fpfh)
-                src_down, src_fpfh = preprocess_point_cloud(source, voxel_size, preprocess_cfg)
-                tgt_down, tgt_fpfh = preprocess_point_cloud(target, voxel_size, preprocess_cfg)
+            for i in range(1, len(clouds)):
 
-                # RANSAC
-                result_ransac = execute_global_registration(src_down, tgt_down, src_fpfh, tgt_fpfh, voxel_size, ransac_cfg)
-                print(f"\n[ RANSAC | Nube {i+1} ] Fitness: {result_ransac.fitness:.4f}, RMSE: {result_ransac.inlier_rmse:.6f}")
+                dx, dy, dz, roll, pitch, yaw = odom_list[i - 1]
+                T_odom = make_transform(dx, dy, dz, roll, pitch, yaw)
 
-                # Normales para ICP (ya estimadas en preprocess pero recalculamos con parámetros de ICP)
-                src_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(
-                    radius=voxel_size * icp_cfg["normal_radius_multiplier"],
-                    max_nn=icp_cfg["normal_max_nn"]
-                ))
-                tgt_down.estimate_normals(o3d.geometry.KDTreeSearchParamHybrid(
-                    radius=voxel_size * icp_cfg["normal_radius_multiplier"],
-                    max_nn=icp_cfg["normal_max_nn"]
-                ))
+                # predicción por odometría
+                T_init = T_global @ T_odom
 
-                # ICP refinado
-                result_icp = refine_registration(src_down, tgt_down, result_ransac.transformation, voxel_size, icp_cfg)
-                print(f"[ ICP | Nube {i+1} ] Fitness: {result_icp.fitness:.4f}, RMSE: {result_icp.inlier_rmse:.6f}")
+                icp = o3d.pipelines.registration.registration_icp(
+                    clouds[i],
+                    clouds[i - 1],
+                    ICP_DIST,
+                    T_init,
+                    o3d.pipelines.registration.TransformationEstimationPointToPlane()
+                )
 
-                # Aplicar transformación y acumular
-                src_down.transform(result_icp.transformation)
-                accumulated += src_down
+                T_global = icp.transformation
+                poses.append(T_global.copy())
 
-            # Resultado final
-            resultado = accumulated
-            self.resultado_pcd = resultado
-            self.ultima_nube_procesada = resultado
-            self.visualizar_pcd(resultado, None)
-            QMessageBox.information(self, "Éxito", "Alineación completada y visualizada.")
+                global_map += clouds[i].transform(T_global)
+
+            # ---------------- RESULTADO ---------------- #
+
+            self.resultado_pcd = global_map
+            self.ultima_nube_procesada = global_map
+            self.visualizar_pcd(global_map, None)
+
+            QMessageBox.information(self, "Éxito", "Alineación completada correctamente.")
 
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error durante alineación: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Error durante la alineación:\n{e}")
 
 #-----------------------------------------------------------------------------
 

@@ -3,6 +3,7 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, LargeBinary
 from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime
+from sqlalchemy.dialects.mysql import LONGBLOB
 
 Base = declarative_base()
 
@@ -34,22 +35,37 @@ class Parametro(Base):
     descripcion = Column(String(255))
     fecha = Column(DateTime, default=datetime.utcnow)
 
-    # Campos técnicos
-    velocidad_maxima = Column(Float)
+    # Campos técnicos    
+
+    # Telemetria
     velocidad_lineal = Column(Float)
     velocidad_angular = Column(Float)
-    tasa_muestreo = Column(Float)
-    campo_vision = Column(Float)
-    resolucion = Column(Float)
-    filtro_ruido = Column(Float)
 
-    metodo_filtrado = Column(String(100))
-    reduccion_ruido = Column(String(100))
-    compensacion_movimiento = Column(String(100))
-    metodo_procesamiento = Column(String(100))
-    tolerancia = Column(Float)
+    # Captura de nubes
+    num_steps = Column(Integer)
+    max_range = Column(Integer)
+    min_range = Column(Integer)
+    fov_angel = Column(Integer)
+    prefijo = Column(String(100))
+
+    # preprocesamiento
+    vecinos = Column(Integer)
+    dev_std = Column(Integer)
+    z_max = Column(Integer)
+    z_min = Column(Integer)
+    voxel_size = Column(Float)
+
+    # procesamiento
+    num_planos = Column(Integer)
+    distancia = Column(Float)
     iteraciones = Column(Integer)
-    correspondencia = Column(Float)
+
+    # alineacion
+    voxel_size_ali = Column(Float)
+    normal_rad = Column(Float)
+    normal_max_nn = Column(Integer)
+    fpfh_rad = Column(Integer)
+    fpfh_max_nn = Column(Integer)    
 
     usuario = relationship("Usuario", back_populates="parametros")
 
@@ -63,7 +79,7 @@ class NubeDePuntos(Base):
     nombre = Column(String(100))
     descripcion = Column(String(255))
     archivo_tipo = Column(String(10))
-    nombre_archivo = Column(String(255))
-    nube_datos = Column(LargeBinary)
+    nombre_archivo = Column(String(255))    
+    nube_datos = Column(LONGBLOB)
     parametroID = Column(Integer, ForeignKey("parametros.parametroID"), nullable=True)
     fecha = Column(DateTime, default=datetime.utcnow)

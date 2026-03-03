@@ -20,10 +20,11 @@ import tempfile
 from fpdf import FPDF
 import laspy
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d import Axes3D 
 
 class VisualizacionWidget(QWidget):
-    def __init__(self, user_id, lista_nubes):
+    def __init__(self, user_id, lista_nubes, parametros_widget):
+
         super().__init__()
         self.user_id = user_id
         self.lista_nubes = lista_nubes
@@ -39,7 +40,7 @@ class VisualizacionWidget(QWidget):
         self.ui.verNubePushButton.clicked.connect(self.visualizar_nube)        
         self.ui.generarReportePushButton.clicked.connect(self.generar_reporte_pdf)
 
-        self.param_widget = ParametrosWidget(user_id)
+        self.param_widget = parametros_widget
 
         self.actualizar_lista_externa(self.lista_nubes)
 
@@ -209,6 +210,19 @@ class VisualizacionWidget(QWidget):
                 except Exception as e:
                     print("Excepción:", e)
                     return {}
+                
+            def obtener_parametros(parametroID):
+                try:
+                    response = requests.get(f"http://127.0.0.1:5000/api/parametros/{parametroID}")
+                    if response.status_code == 200:
+                        parametros = response.json().get("parametros", {})
+                        return parametros
+                    else:
+                        print("Error al obtener parámetros de la nube:", response.text)
+                        return {}
+                except Exception as e:
+                    print("Excepción:", e)
+                    return {}
             
             # Obtener info de la nube
             meta_resp = requests.get(f"http://127.0.0.1:5000/api/nube_puntos/{nube_id}/info")
@@ -222,17 +236,10 @@ class VisualizacionWidget(QWidget):
                 }
 
             # Obtener parámetros seleccionados
-            parametroID = self.param_widget.obtener_parametro_seleccionado()
-            parametros = {}
-            if parametroID:
-                param_resp = requests.get(f"http://127.0.0.1:5000/api/parametros/{parametroID}")
-                if param_resp.status_code == 200:
-                    parametros = param_resp.json().get("parametros", {})
-
-
+            parametroID = self.param_widget.obtener_parametro_seleccionado()            
 
             usuario = obtener_datos_usuario(self.user_id)
-            #parametros = {"Resolución": "0.05 m", "Filtro": "Voxel", "Método": "None"}
+            parametros = obtener_parametros(parametroID)
             
             pdf = ReportePDF()
             pdf.add_page()
@@ -259,22 +266,31 @@ class VisualizacionWidget(QWidget):
 
 #-----------------------------------------------------------------------------
 
-class ReportePDF(FPDF):
+class ReportePDF(FPDF):    
     def header(self):
-        # Logos alineados a la derecha
-        logo_width = 20
-        espacio_entre_logos = 5
         margen_derecho = 10
+        espacio = 8
+        y_logo = 10
+
+        # Tamaños reales
+        w_univalle = 15
+        w_psi = 55
+        w_app = 90
+
+        # Logo derecha (Univalle)
+        x_univalle = self.w - margen_derecho - w_univalle
+        self.image("recursos/univalle.png", x=x_univalle, y=y_logo, w=w_univalle)
+
+        # Logo del centro (PSI)
+        x_psi = x_univalle - espacio - w_psi
+        self.image("recursos/psi.png", x=x_psi, y=y_logo, w=w_psi)
+
+        # Logo izquierda (BuildScan App)
+        x_app = x_psi - espacio - w_app
+        self.image("recursos/logoApp.png", x=x_app, y=y_logo, w=w_app)
+
         y_logo = 10                
-
-        # Segundo logo (más a la derecha)
-        x_logo2 = self.w - margen_derecho - logo_width
-        self.image("recursos/univalle.png", x=x_logo2, y=y_logo, w=logo_width)
-
-        # Primer logo a la izquierda del segundo
-        x_logo1 = x_logo2 - espacio_entre_logos - logo_width
-        self.image("recursos/psi.png", x=x_logo1-45, y=y_logo, w=logo_width+45)
-
+        logo_width = 20
         # Título centrado debajo de los logos
         self.set_xy(0, y_logo + logo_width + 12)
         self.set_font("Arial", 'B', 14)
@@ -323,8 +339,6 @@ class ReportePDF(FPDF):
         self.cell(0, 8, f"Nombre: {nombre}", ln=True)
         self.cell(0, 8, f"Descripción: {descripcion}", ln=True)
         self.cell(0, 8, f"Fecha de captura: {fecha}", ln=True)
-
-
 
     def add_las_info(self, las_path):
         self.set_font("Arial", size=12)

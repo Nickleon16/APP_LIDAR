@@ -20,7 +20,7 @@ from datetime import datetime
 from PyQt5.QtCore import pyqtSignal
 from datetime import datetime
 
-
+from PyQt5.QtCore import Qt
 
 # ============================================================
 # Hilo de movimiento
@@ -56,6 +56,9 @@ class TelecomandoWidget(QWidget):
         super().__init__()
         self.user_id = user_id
 
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocus()
+        
         # UI
         self.ui = Ui_Form()
         self.ui.setupUi(self)
@@ -89,6 +92,9 @@ class TelecomandoWidget(QWidget):
         self.ui.derechaPushButton.pressed.connect(self.derecha)
         self.ui.derechaPushButton.released.connect(self.stop)
 
+        self.ui.iniciarOdomPushButton.clicked.connect(self.iniciar_odom)
+        self.ui.finalizarOdomPushButton.clicked.connect(self.stop_odom)
+
         
         self.cloud_received.connect(self.mostrar_y_guardar_nube)
 
@@ -100,6 +106,46 @@ class TelecomandoWidget(QWidget):
     # ============================================================
     # Movimiento
     # ============================================================
+
+    def iniciar_odom(self):
+        respuesta = QMessageBox.question(
+            self,
+            "Iniciar guardado de odometría",
+            "¿Iniciar?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes)
+
+        if respuesta == QMessageBox.Yes:
+            QMessageBox.information(
+                self,
+                "Registro de odometría",
+                "Registro de odometría iniciado.")
+        else:
+            QMessageBox.information(
+                self,
+                "Registro de odometría",
+                "Registro de odometría no iniciado.")
+        return
+
+    def stop_odom(self):
+        respuesta = QMessageBox.question(
+            self,
+            "Detener guardado de odometría",
+            "¿Detener?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.Yes)
+
+        if respuesta == QMessageBox.Yes:
+            QMessageBox.information(
+                self,
+                "Registro de odometría",
+                "Registro de odometría detenido.")
+        else:
+            QMessageBox.information(
+                self,
+                "Registro de odometría",
+                "Registro de odometría no detenido.")
+        return
 
     def get_linear_speed(self):
         return float(self.ui.velLineSpinBox.value())
@@ -129,6 +175,29 @@ class TelecomandoWidget(QWidget):
 
     def stop(self):
         self.movement_thread.update_twist(Twist())
+
+    def keyPressEvent(self, event):
+        key = event.key()
+
+        if key == Qt.Key_W:
+            self.avanzar()
+        elif key == Qt.Key_S:
+            self.retroceder()
+        elif key == Qt.Key_A:
+            self.izquierda()
+        elif key == Qt.Key_D:
+            self.derecha()
+
+        event.accept()
+
+    def keyReleaseEvent(self, event):
+        key = event.key()
+
+        # detener solo si la tecla soltada es una de las WASD
+        if key in (Qt.Key_W, Qt.Key_S, Qt.Key_A, Qt.Key_D):
+            self.stop()
+
+        event.accept()
 
     # ============================================================
     # Llamar servicio de captura

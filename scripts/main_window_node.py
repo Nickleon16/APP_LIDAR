@@ -32,7 +32,10 @@ class MainWindow(QMainWindow):
         self.ui.tabWidget.addTab(self.procesamiento_widget, "Procesamiento")
 
         # --- Pestaña de visualizacion ---
-        self.visualizacion_widget = VisualizacionWidget(user_id, self.nubes_cargadas)
+        self.visualizacion_widget = VisualizacionWidget(
+            user_id,
+            self.nubes_cargadas,
+            self.parametros_widget)
         self.ui.tabWidget.addTab(self.visualizacion_widget, "Visualización")
 
         # --- Pestaña de telecomando ---

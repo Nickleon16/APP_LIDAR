@@ -44,21 +44,35 @@ def crear_parametros_por_defecto():
             parametros = Parametro(
                 usuario_id=None,
                 nombre_preset="Default",
-                descripcion="Parámetros por defecto",
-                velocidad_maxima=2.0,
-                velocidad_lineal=1.0,
-                velocidad_angular=1.0,
-                tasa_muestreo=10,
-                campo_vision=180.0,
-                #resolucion="Alta",
-                #filtro_ruido="Media",
-                #metodo_filtrado="Filtro Gaussiano",
-                #reduccion_ruido="Media",
-                #compensacion_movimiento="Compensación básica",
-                #metodo_procesamiento="ICP",
-                #tolerancia=0.01,
-                #iteraciones=50,
-                #correspondencia="KD-Tree",
+                descripcion="Parámetros por defecto",                
+            # Telemetria
+                velocidad_lineal = 2,
+                velocidad_angular = 2,
+
+                # Captura de nubes
+                num_steps = 60,
+                max_range = 10,
+                min_range = 0,
+                fov_angel = 45,
+                prefijo = "nube",
+                # preprocesamiento
+                vecinos = 5,
+                dev_std = 2,
+                z_max = 10,
+                z_min = 0,
+                voxel_size = 0.15,
+
+                # procesamiento
+                num_planos = 5,
+                distancia = 0.01,
+                iteraciones = 100,
+
+                # alineacion
+                voxel_size_ali = 0.15,
+                normal_rad = 0.30,
+                normal_max_nn = 45,
+                fpfh_rad = 5,
+                fpfh_max_nn = 100,    
                 fecha=datetime.datetime.utcnow()
             )
             session.add(parametros)

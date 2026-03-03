@@ -519,7 +519,7 @@
      <x>280</x>
      <y>350</y>
      <width>341</width>
-     <height>161</height>
+     <height>211</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -623,6 +623,45 @@
       <width>32</width>
       <height>32</height>
      </size>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="seleccionarOdomPushButton">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>150</y>
+      <width>51</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>Subir nueva nube</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="icon">
+     <iconset resource="iconos.qrc">
+      <normaloff>:/newPrefix/icons8-plus-math-60.png</normaloff>:/newPrefix/icons8-plus-math-60.png</iconset>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>32</width>
+      <height>33</height>
+     </size>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="odomListWidget">
+    <property name="geometry">
+     <rect>
+      <x>180</x>
+      <y>160</y>
+      <width>151</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="selectionMode">
+     <enum>QAbstractItemView::MultiSelection</enum>
     </property>
    </widget>
   </widget>
